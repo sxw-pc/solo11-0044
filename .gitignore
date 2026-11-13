@@ -10,3 +10,10 @@ workdir/*
 *.sqlite
 *.sqlite3
 *.db
+.venv/
+venv/
+node_modules/
+*.pyc
+.benchmarks/
+.env
+dist/
