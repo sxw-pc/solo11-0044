@@ -1,0 +1,36 @@
+version: 1
+input_dirs:
+  - fixtures/out
+recursive: true
+include_suffixes:
+  - .mp4
+  - .m4v
+  - .mov
+ignore_globs:
+  - "**/.*"
+  - "**/*.tmp"
+primary_track: first_video
+max_detail_frames: 240
+histogram_buckets: 8
+adapter: builtin
+report:
+  output_dir: workdir
+  json_name: report.json
+  markdown_name: report.md
+database:
+  path: workdir/fpsprobe.db
+thresholds:
+  fps_abs_tolerance: 0.01
+  fps_rel_tolerance: 0.0005
+  cfr_delta_rel_tolerance: 0.01
+  vfr_jitter_threshold: 0.08
+  vfr_p95_p50_threshold: 1.5
+  mismatch_review_abs_fps: 0.02
+classification:
+  cfr_ok: ok
+  cfr_mismatch: review
+  vfr_suspect: review
+  timestamp_broken: reject
+server:
+  host: 127.0.0.1
+  port: 5180

@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fpsprobe"
+version = "0.1.0"
+description = "Offline, metadata-only frame-rate and timestamp consistency inspector"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+yaml = ["PyYAML>=6"]
+dev = ["pytest>=7"]
+
+[project.scripts]
+fpsprobe = "fpsprobe.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["fpsprobe*", "fixtures*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]

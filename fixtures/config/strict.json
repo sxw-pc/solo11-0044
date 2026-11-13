@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "input_dirs": ["fixtures/out"],
+  "recursive": true,
+  "include_suffixes": [".mp4", ".m4v", ".mov"],
+  "ignore_globs": ["**/.*", "**/*.tmp"],
+  "primary_track": "longest_video",
+  "max_detail_frames": 120,
+  "histogram_buckets": 12,
+  "adapter": "builtin",
+  "report": {
+    "output_dir": "workdir/strict",
+    "json_name": "report.json",
+    "markdown_name": "report.md"
+  },
+  "database": {
+    "path": "workdir/strict/fpsprobe.db"
+  },
+  "thresholds": {
+    "fps_abs_tolerance": 0.001,
+    "fps_rel_tolerance": 0.0001,
+    "cfr_delta_rel_tolerance": 0.001,
+    "vfr_jitter_threshold": 0.02,
+    "vfr_p95_p50_threshold": 1.1,
+    "mismatch_review_abs_fps": 0.001
+  },
+  "classification": {
+    "cfr_ok": "ok",
+    "cfr_mismatch": "review",
+    "vfr_suspect": "review",
+    "timestamp_broken": "reject"
+  },
+  "server": {
+    "host": "127.0.0.1",
+    "port": 5180
+  }
+}

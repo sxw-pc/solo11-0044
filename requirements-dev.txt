@@ -1,0 +1,4 @@
+# Runtime dependencies: none (Python standard library only).
+# PyYAML is optional; without it fpsprobe falls back to the sibling JSON config.
+pytest>=7
+ruff>=0.5
