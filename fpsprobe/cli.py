@@ -96,6 +96,19 @@ def _report(args: argparse.Namespace) -> int:
     return 0
 
 
+def _diff(args: argparse.Namespace) -> int:
+    database = Path(args.db) if args.db else DEFAULT_DB
+    with Ledger(database, read_only=True) as ledger:
+        result = ledger.diff_runs(args.run_a, args.run_b)
+    if args.changed_only:
+        result = dict(result)
+        result["files"] = [entry for entry in result["files"] if entry["flipped"]]
+        result["summary"] = dict(result["summary"])
+        result["summary"]["files_reported"] = len(result["files"])
+    _emit(result)
+    return 0
+
+
 def _serve(args: argparse.Namespace) -> int:
     config = _load(args.config) if args.config else None
     host = args.host or (config.server_host if config else "127.0.0.1")
@@ -164,6 +177,19 @@ def build_parser() -> argparse.ArgumentParser:
     report.add_argument("--format", choices=("json", "md"), default="json")
     report.add_argument("--db")
     report.set_defaults(func=_report)
+
+    diff = subparsers.add_parser(
+        "diff", help="compare verdicts and configuration between two finished runs"
+    )
+    diff.add_argument("--run-a", required=True)
+    diff.add_argument("--run-b", required=True)
+    diff.add_argument("--db")
+    diff.add_argument(
+        "--changed-only",
+        action="store_true",
+        help="omit files whose verdict and classification are unchanged",
+    )
+    diff.set_defaults(func=_diff)
 
     server = subparsers.add_parser("serve", help="serve the read-only local HTTP API")
     server.add_argument("--host")

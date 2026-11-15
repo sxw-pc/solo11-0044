@@ -1,4 +1,4 @@
-"""Idempotent SQLite ledger operations."""
+"""Idempotent SQLite ledger operations and cross-run configuration diffing."""
 
 from __future__ import annotations
 
@@ -10,8 +10,55 @@ from pathlib import Path
 from typing import Any
 
 from .. import __version__
-from ..errors import LedgerError, RunFinishedError, RunNotFound
+from ..errors import (
+    ConfigSnapshotMissing,
+    LedgerError,
+    RunFinishedError,
+    RunNotFound,
+    RunNotFinished,
+)
 from .schema import connect
+
+# Severity ordering for ok/review/reject triage levels.
+CLASS_LEVELS = {"ok": 0, "review": 1, "reject": 2}
+
+# Top-level configuration sections that can actually move a verdict or its
+# triage level. Reporting/database/server plumbing is deliberately excluded so
+# environment path changes never masquerade as classification drivers.
+DECISION_SECTIONS = frozenset({"thresholds", "classification", "primary_track", "adapter"})
+
+# Decision-relevant configuration leaves for each consistency verdict. A leaf is
+# listed here only if changing it can actually move that verdict's classification.
+VERDICT_CONFIG_KEYS: dict[str, frozenset[str]] = {
+    "CFR_OK": frozenset(
+        {
+            "thresholds.fps_abs_tolerance",
+            "thresholds.fps_rel_tolerance",
+            "classification.cfr_ok",
+        }
+    ),
+    "CFR_MISMATCH": frozenset(
+        {
+            "thresholds.fps_abs_tolerance",
+            "thresholds.fps_rel_tolerance",
+            "thresholds.mismatch_review_abs_fps",
+            "classification.cfr_mismatch",
+        }
+    ),
+    "VFR_SUSPECT": frozenset(
+        {
+            "thresholds.vfr_jitter_threshold",
+            "thresholds.vfr_p95_p50_threshold",
+            "thresholds.cfr_delta_rel_tolerance",
+            "classification.vfr_suspect",
+        }
+    ),
+    "TIMESTAMP_BROKEN": frozenset(
+        {
+            "classification.timestamp_broken",
+        }
+    ),
+}
 
 
 def _now() -> str:
@@ -29,6 +76,62 @@ def _loads(value: str | None, fallback: Any) -> Any:
         return json.loads(value)
     except json.JSONDecodeError:
         return fallback
+
+
+def flatten_config(value: Any, prefix: str = "") -> dict[str, Any]:
+    """Flatten a nested mapping into dotted leaves; lists are terminal values."""
+    flattened: dict[str, Any] = {}
+    if isinstance(value, dict):
+        for key in sorted(value):
+            label = f"{prefix}.{key}" if prefix else str(key)
+            flattened.update(flatten_config(value[key], label))
+        return flattened
+    flattened[prefix] = value
+    return flattened
+
+
+def diff_configs(config_a: Any, config_b: Any) -> dict[str, dict[str, Any]]:
+    """Return every added/removed/changed dotted leaf between two raw configs."""
+    leaves_a = flatten_config(config_a)
+    leaves_b = flatten_config(config_b)
+    changes: dict[str, dict[str, Any]] = {}
+    for key in sorted(set(leaves_a) | set(leaves_b)):
+        if key not in leaves_a:
+            changes[key] = {"run_a": None, "run_b": leaves_b[key], "kind": "added"}
+        elif key not in leaves_b:
+            changes[key] = {"run_a": leaves_a[key], "run_b": None, "kind": "removed"}
+        elif leaves_a[key] != leaves_b[key]:
+            changes[key] = {
+                "run_a": leaves_a[key],
+                "run_b": leaves_b[key],
+                "kind": "changed",
+            }
+    return changes
+
+
+def _direction(classification_a: str | None, classification_b: str | None) -> str:
+    """Encode the ok/review/reject movement, including one-sided appearances."""
+    if classification_a is None and classification_b is not None:
+        return f"added:{classification_b}"
+    if classification_b is None and classification_a is not None:
+        return f"removed:{classification_a}"
+    if classification_a == classification_b:
+        return "unchanged"
+    level_a = CLASS_LEVELS.get(str(classification_a), -1)
+    level_b = CLASS_LEVELS.get(str(classification_b), -1)
+    if level_b > level_a:
+        return f"escalated:{classification_a}->{classification_b}"
+    if level_b < level_a:
+        return f"de-escalated:{classification_a}->{classification_b}"
+    return f"changed:{classification_a}->{classification_b}"
+
+
+def _trigger_keys(verdict_a: str | None, verdict_b: str | None) -> frozenset[str]:
+    keys: set[str] = set()
+    for verdict in (verdict_a, verdict_b):
+        if verdict in VERDICT_CONFIG_KEYS:
+            keys.update(VERDICT_CONFIG_KEYS[verdict])
+    return frozenset(keys)
 
 
 class Ledger:
@@ -52,6 +155,21 @@ class Ledger:
         row = self._run_row(run_id)
         if row["finished_at"] is not None or row["status"] == "finished":
             raise RunFinishedError(f"run is finished and immutable: {run_id}")
+    def record_config_snapshot(
+        self, config_fingerprint: str, raw_config: dict[str, Any]
+    ) -> None:
+        """Persist the full configuration behind a fingerprint once; idempotent."""
+        if not config_fingerprint:
+            raise LedgerError("config fingerprint is required")
+        if not isinstance(raw_config, dict):
+            raise LedgerError("config snapshot must be a mapping")
+        self.conn.execute(
+            "INSERT INTO config_snapshots(config_fingerprint, config_json, recorded_at) "
+            "VALUES (?, ?, ?) ON CONFLICT(config_fingerprint) DO NOTHING",
+            (config_fingerprint, _dump(raw_config), _now()),
+        )
+        self.conn.commit()
+
     def create_run(
         self,
         config_fingerprint: str,
@@ -59,6 +177,7 @@ class Ledger:
         *,
         run_id: str | None = None,
         started_at: str | None = None,
+        config: dict[str, Any] | None = None,
     ) -> str:
         if not config_fingerprint:
             raise LedgerError("config fingerprint is required")
@@ -78,7 +197,18 @@ class Ledger:
             self.conn.commit()
         except sqlite3.IntegrityError as exc:
             raise LedgerError(f"run already exists: {identifier}", code="RUN_EXISTS") from exc
+        if config is not None:
+            self.record_config_snapshot(config_fingerprint, config)
         return identifier
+
+    def get_config_snapshot(self, config_fingerprint: str) -> dict[str, Any] | None:
+        row = self.conn.execute(
+            "SELECT config_json FROM config_snapshots WHERE config_fingerprint = ?",
+            (config_fingerprint,),
+        ).fetchone()
+        if row is None:
+            return None
+        return _loads(row["config_json"], None)
     def upsert_file(
         self,
         run_id: str,
@@ -293,4 +423,149 @@ class Ledger:
                 self.conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
             )
             for table in ("runs", "files", "file_verdicts", "timeline_samples")
+        }
+
+    def _require_finished_run(self, run_id: str):
+        row = self._run_row(run_id)
+        if row["status"] != "finished" or row["finished_at"] is None:
+            raise RunNotFinished(
+                f"run is still {row['status']} and cannot be compared yet: {run_id}"
+            )
+        return row
+
+    def _run_file_verdicts(self, run_id: str) -> dict[tuple[str, str], dict[str, Any]]:
+        """Map (path, sha256) identity to the run's verdict, decoupled from fingerprint."""
+        rows = self.conn.execute(
+            "SELECT f.path AS path, f.sha256 AS sha256, "
+            "v.verdict AS verdict, v.classification AS classification "
+            "FROM file_verdicts v "
+            "JOIN files f ON f.id = v.file_id "
+            "WHERE v.run_id = ? ORDER BY f.path ASC",
+            (run_id,),
+        ).fetchall()
+        return {
+            (row["path"], row["sha256"]): {
+                "verdict": row["verdict"],
+                "classification": row["classification"],
+            }
+            for row in rows
+        }
+
+    def diff_runs(self, run_a: str, run_b: str) -> dict[str, Any]:
+        """Compare two finished runs, merging file identities across config fingerprints.
+
+        Files are keyed by (path, sha256) so the same material stored under several
+        config fingerprints is aligned. Per-file verdict/classification movement and
+        the configuration leaves that could have triggered it are reported, rather
+        than opaque fingerprint strings.
+        """
+        row_a = self._require_finished_run(run_a)
+        row_b = self._require_finished_run(run_b)
+        files_a = self._run_file_verdicts(run_a)
+        files_b = self._run_file_verdicts(run_b)
+
+        snapshot_a = self.get_config_snapshot(row_a["config_fingerprint"])
+        snapshot_b = self.get_config_snapshot(row_b["config_fingerprint"])
+        if snapshot_a is None or snapshot_b is None:
+            missing = run_a if snapshot_a is None else run_b
+            raise ConfigSnapshotMissing(
+                "configuration snapshot missing for run "
+                f"{missing}; rerun with a current build to enable diffing"
+            )
+        decision_a = {
+            key: value
+            for key, value in snapshot_a.items()
+            if key in DECISION_SECTIONS
+        }
+        decision_b = {
+            key: value
+            for key, value in snapshot_b.items()
+            if key in DECISION_SECTIONS
+        }
+        config_changes = diff_configs(decision_a, decision_b)
+
+        entries: list[dict[str, Any]] = []
+        counts = {
+            "common": 0,
+            "only_in_a": 0,
+            "only_in_b": 0,
+            "flipped": 0,
+            "verdict_flipped": 0,
+            "classification_flipped": 0,
+            "attributed": 0,
+        }
+        for identity in sorted(set(files_a) | set(files_b), key=lambda item: item[0]):
+            path, sha256 = identity
+            side_a = files_a.get(identity)
+            side_b = files_b.get(identity)
+            verdict_a = side_a["verdict"] if side_a else None
+            verdict_b = side_b["verdict"] if side_b else None
+            class_a = side_a["classification"] if side_a else None
+            class_b = side_b["classification"] if side_b else None
+            if side_a and side_b:
+                presence = "common"
+            elif side_a:
+                presence = "only_in_a"
+            else:
+                presence = "only_in_b"
+            counts[presence] += 1
+
+            verdict_flipped = verdict_a != verdict_b
+            classification_flipped = class_a != class_b
+            flipped = verdict_flipped or classification_flipped
+            if flipped:
+                counts["flipped"] += 1
+            if verdict_flipped:
+                counts["verdict_flipped"] += 1
+            if classification_flipped:
+                counts["classification_flipped"] += 1
+
+            relevant = _trigger_keys(verdict_a, verdict_b)
+            trigger_fields = {
+                key: change
+                for key, change in config_changes.items()
+                if key in relevant
+            }
+            attributed = bool(trigger_fields)
+            if attributed:
+                counts["attributed"] += 1
+
+            entries.append(
+                {
+                    "path": path,
+                    "sha256": sha256,
+                    "presence": presence,
+                    "verdict_a": verdict_a,
+                    "verdict_b": verdict_b,
+                    "classification_a": class_a,
+                    "classification_b": class_b,
+                    "verdict_flipped": verdict_flipped,
+                    "classification_flipped": classification_flipped,
+                    "flipped": flipped,
+                    "direction": _direction(class_a, class_b),
+                    "trigger_fields": trigger_fields,
+                    "attributed": attributed,
+                }
+            )
+
+        return {
+            "run_a": {
+                "run_id": run_a,
+                "config_fingerprint": row_a["config_fingerprint"],
+                "status": row_a["status"],
+                "config_recorded": True,
+            },
+            "run_b": {
+                "run_id": run_b,
+                "config_fingerprint": row_b["config_fingerprint"],
+                "status": row_b["status"],
+                "config_recorded": True,
+            },
+            "config_diff": config_changes,
+            "summary": {
+                **counts,
+                "total_identities": len(entries),
+                "config_fields_changed": len(config_changes),
+            },
+            "files": entries,
         }

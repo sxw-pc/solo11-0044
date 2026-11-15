@@ -125,6 +125,7 @@ make demo    # 生成 fixture -> 整批分析 -> 打印摘要和报告路径
 | `python -m fpsprobe probe <file>` | 单文件分析，JSON 输出到 stdout |
 | `python -m fpsprobe batch --config <path>` | 扫描目录、逐文件分析、入库并写报告 |
 | `python -m fpsprobe report --run-id <id> --format json\|md` | 从 SQLite 重新生成报告 |
+| `python -m fpsprobe diff --run-a <id> --run-b <id> --db <path>` | 跨 run 对比文件判定翻转并归因到具体配置键 |
 | `python -m fpsprobe serve --port 5180` | 启动只读本地 HTTP 服务 |
 | `python -m fpsprobe fixtures gen` | 生成 5 个确定性 fixture |
 | `python -m fpsprobe selftest` | 生成 fixture 并跑端到端冒烟检查 |
@@ -150,11 +151,12 @@ make demo    # 生成 fixture -> 整批分析 -> 打印摘要和报告路径
 
 ## 台账（SQLite）
 
-默认数据库：`workdir/fpsprobe.db`。四张表：
+默认数据库：`workdir/fpsprobe.db`。五张表：
 
 | 表 | 关键字段 | 作用 |
 | --- | --- | --- |
 | `runs` | `run_id`、`config_fingerprint`、`started_at`、`finished_at`、`summary_json` | 一次批处理的生命周期与汇总 |
+| `config_snapshots` | `config_fingerprint`、`config_json` | 每个指纹对应的完整原始配置，供跨 run 做键级配置差异对比 |
 | `files` | `path`、`sha256`、`size_bytes`、`config_fingerprint`、`status`、`error_code` | 文件事实台账；唯一键 `(path, sha256, config_fingerprint)` |
 | `file_verdicts` | `run_id`、`file_id`、`verdict`、`classification`、`reason_codes`、`payload_json` | 每个 run 中每个文件的完整判定 |
 | `timeline_samples` | `run_id`、`file_id`、`frame_count`、`stored_frame_count`、`truncated`、`summary_json` | 有界时间线明细；帧数超过 `max_detail_frames` 时只存摘要 |
@@ -165,6 +167,18 @@ make demo    # 生成 fixture -> 整批分析 -> 打印摘要和报告路径
 - 同一 `run_id + file_id` 重复记录 verdict 会更新该行而不追加；
 - `finish_run` 只完成一次；之后的 `upsert_file` / `record_verdict` 会被拒绝，重复调用 `finish_run` 是无副作用 no-op。
 - 重复运行同一批文件会产生新的 `runs` 和新的 `file_verdicts`，但不会重复 `files`。
+
+### 跨 run 配置差异重检（`diff`）
+
+同一素材在不同阈值配置下会因 `config_fingerprint` 不同而在 `files` 中存成多行。`diff` 以 **`path + sha256` 作为文件身份**（与配置指纹解耦）跨 run 归并，再对齐两侧 `file_verdicts`：
+
+- 仅出现在一侧的文件标记为 `only_in_a` / `only_in_b`，缺失侧的 verdict 与 classification 为 `null`，方向为 `added:<class>` / `removed:<class>`；
+- 两侧都有的文件给出 `verdict_a→verdict_b`、`classification_a→classification_b`，并按 `ok < review < reject` 级别语义输出 `direction`（`escalated` / `de-escalated` / `unchanged`）；
+- `config_diff` 只比较能影响判定的配置段（`thresholds`、`classification`、`primary_track`、`adapter`），报告/数据库/服务器等环境路径变化不会混入；每个差异以点号叶子键给出两侧具体值，例如 `thresholds.mismatch_review_abs_fps`、`classification.vfr_suspect`，而不是只贴指纹；
+- 每个文件的 `trigger_fields` 依据两侧 verdict 实际引用的配置键，从 `config_diff` 中筛出可能触发本次翻转的字段；`attributed=false` 表示该文件的 verdict 不依赖任何发生变化的键（翻转来自素材本身或其他因素）；
+- `--changed-only` 只输出发生翻转的文件。
+
+两个 run 都必须是 `finished` 状态；任一仍在 `running` 会被拒绝并返回稳定错误码 `RUN_NOT_FINISHED`（退出码 2），未知 run 返回 `RUN_NOT_FOUND`。旧版本数据库缺少配置快照时返回 `CONFIG_SNAPSHOT_MISSING`，需用当前版本重跑后才能对比。schema 从 v1 到 v2 的升级是纯加列/加表迁移，打开旧库时自动执行。
 
 ---
 

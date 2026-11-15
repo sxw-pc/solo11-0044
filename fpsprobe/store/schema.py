@@ -5,7 +5,7 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 SCHEMA_SQL = """
 PRAGMA foreign_keys = ON;
@@ -20,6 +20,12 @@ CREATE TABLE IF NOT EXISTS runs (
     status             TEXT NOT NULL DEFAULT 'running',
     total_files        INTEGER NOT NULL DEFAULT 0,
     summary_json       TEXT
+);
+
+CREATE TABLE IF NOT EXISTS config_snapshots (
+    config_fingerprint TEXT PRIMARY KEY,
+    config_json        TEXT NOT NULL,
+    recorded_at        TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS files (
@@ -73,8 +79,20 @@ CREATE INDEX IF NOT EXISTS idx_verdicts_run_class
     ON file_verdicts(run_id, classification);
 CREATE INDEX IF NOT EXISTS idx_verdicts_run_verdict
     ON file_verdicts(run_id, verdict);
-PRAGMA user_version = 1;
 """
+
+
+def _migrate(connection: sqlite3.Connection) -> None:
+    """Apply additive upgrades to databases created by older schema versions."""
+    version = int(connection.execute("PRAGMA user_version").fetchone()[0] or 0)
+    if version < 2:
+        connection.execute(
+            "CREATE TABLE IF NOT EXISTS config_snapshots ("
+            "config_fingerprint TEXT PRIMARY KEY, "
+            "config_json TEXT NOT NULL, "
+            "recorded_at TEXT NOT NULL)"
+        )
+        connection.execute("PRAGMA user_version = 2")
 
 
 def connect(path: str | Path, *, read_only: bool = False) -> sqlite3.Connection:
@@ -97,4 +115,5 @@ def connect(path: str | Path, *, read_only: bool = False) -> sqlite3.Connection:
 
 def initialize(connection: sqlite3.Connection) -> None:
     connection.executescript(SCHEMA_SQL)
+    _migrate(connection)
     connection.commit()

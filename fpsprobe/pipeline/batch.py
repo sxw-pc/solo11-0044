@@ -100,7 +100,11 @@ def run_batch(
     source_dir = config.input_label()
     summary = _empty_summary(source_dir)
     try:
-        run_id = ledger.create_run(config.fingerprint, source_dir=source_dir)
+        run_id = ledger.create_run(
+            config.fingerprint,
+            source_dir=source_dir,
+            config=config.raw,
+        )
         for path, display in inputs:
             outcome = process_file(
                 path,

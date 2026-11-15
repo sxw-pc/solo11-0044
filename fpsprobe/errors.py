@@ -94,3 +94,17 @@ class RunNotFound(LedgerError):
 class RunFinishedError(LedgerError):
     default_code = "RUN_FINISHED"
     exit_code = 3
+
+
+class RunNotFinished(LedgerError):
+    """A cross-run comparison requires both runs to be finalised."""
+
+    default_code = "RUN_NOT_FINISHED"
+    exit_code = 2
+
+
+class ConfigSnapshotMissing(LedgerError):
+    """A run predates config snapshot persistence and cannot be diffed."""
+
+    default_code = "CONFIG_SNAPSHOT_MISSING"
+    exit_code = 2
