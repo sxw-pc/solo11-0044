@@ -100,6 +100,7 @@ class FfprobeAdapter:
             sample_count=sample_count,
             width=int(stream.get("width") or 0),
             height=int(stream.get("height") or 0),
+            tkhd_duration_ticks=round(duration * MICROSECOND_TIMESCALE),
         )
 
     def probe(self, path: str, primary_track: str | int = "first_video") -> ProbeResult:
@@ -154,6 +155,7 @@ class FfprobeAdapter:
             sample_count=len(pts),
             width=chosen_info.width,
             height=chosen_info.height,
+            tkhd_duration_ticks=chosen_info.tkhd_duration_ticks,
         )
         timestamps = TrackTimestamps(
             track=primary,

@@ -26,6 +26,7 @@ thresholds:
   vfr_jitter_threshold: 0.08
   vfr_p95_p50_threshold: 1.5
   mismatch_review_abs_fps: 0.02
+  duration_rel_tolerance: 0.005
 classification:
   cfr_ok: ok
   cfr_mismatch: review

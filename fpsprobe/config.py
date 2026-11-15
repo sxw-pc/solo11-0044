@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from .errors import ConfigError, ConfigInvalid, ConfigMissingField, ConfigNotFound
-from .models import Thresholds
+from .models import DEFAULT_DURATION_REL_TOLERANCE, Thresholds
 
 CLASSIFICATION_VALUES = {"ok", "review", "reject"}
 PRIMARY_STRATEGIES = {"first_video", "longest_video"}
@@ -222,6 +222,11 @@ def load_config(path: str | Path, base_dir: str | Path | None = None) -> Config:
                 "thresholds.mismatch_review_abs_fps",
             ),
             "thresholds.mismatch_review_abs_fps",
+        ),
+        # Optional: older configuration files predate duration reconciliation.
+        duration_rel_tolerance=_number(
+            threshold_raw.get("duration_rel_tolerance", DEFAULT_DURATION_REL_TOLERANCE),
+            "thresholds.duration_rel_tolerance",
         ),
     )
 

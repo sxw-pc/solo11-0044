@@ -227,6 +227,7 @@ class Ledger:
             "error_message": row["error_message"],
             "container": None,
             "timestamps": None,
+            "duration_reconciliation": None,
             "verdict": row["verdict"],
             "reason_codes": _loads(row["reason_codes"], []),
             "reason_text": row["reason_text"],

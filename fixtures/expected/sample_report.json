@@ -19,13 +19,27 @@
         "stream_count": 1,
         "video_stream_count": 1
       },
+      "duration_reconciliation": {
+        "code": "DURATION_CONSISTENT",
+        "media_duration_seconds": 2.0,
+        "movie_duration_seconds": 2.0,
+        "movie_media_delta_seconds": 0.0,
+        "movie_media_rel_deviation": 0.0,
+        "movie_track_delta_seconds": 0.0,
+        "movie_track_rel_deviation": 0.0,
+        "rel_tolerance": 0.005,
+        "track_duration_seconds": 2.0,
+        "track_media_delta_seconds": 0.0,
+        "track_media_rel_deviation": 0.0
+      },
       "error_code": null,
       "error_message": null,
       "path": "broken_order.mp4",
       "reason_codes": [
         "TIMESTAMP_REVERSAL",
         "DUPLICATE_TIMESTAMP",
-        "NON_POSITIVE_DELTA"
+        "NON_POSITIVE_DELTA",
+        "DURATION_CONSISTENT"
       ],
       "reason_text": "3 non-positive interval(s) found at indices [9, 11, 13]; 1 reversal(s), 2 duplicate(s). TIMESTAMP_BROKEN maps to reject by configuration.",
       "sha256": "75fabf2a07c54fb8eb43fc7461d683b5396ebace7d58a9489c7b36fe6a44ee20",
@@ -136,12 +150,26 @@
         "stream_count": 1,
         "video_stream_count": 1
       },
+      "duration_reconciliation": {
+        "code": "DURATION_CONSISTENT",
+        "media_duration_seconds": 2.002,
+        "movie_duration_seconds": 2.0,
+        "movie_media_delta_seconds": -0.0019999999999997797,
+        "movie_media_rel_deviation": 0.000999000999000889,
+        "movie_track_delta_seconds": -0.0019999999999997797,
+        "movie_track_rel_deviation": 0.000999000999000889,
+        "rel_tolerance": 0.005,
+        "track_duration_seconds": 2.002,
+        "track_media_delta_seconds": 0.0,
+        "track_media_rel_deviation": 0.0
+      },
       "error_code": null,
       "error_message": null,
       "path": "cfr_2997.mp4",
       "reason_codes": [
         "DECLARED_FPS_MISMATCH",
-        "MISMATCH_ABOVE_REVIEW_THRESHOLD"
+        "MISMATCH_ABOVE_REVIEW_THRESHOLD",
+        "DURATION_CONSISTENT"
       ],
       "reason_text": "Stable intervals measured 29.970 fps, but the container declares 30.000 fps (delta 0.030). CFR_MISMATCH delta 0.030 fps is at or above the review threshold 0.020; classified review.",
       "sha256": "5bbf631eca050c87fb043af8e9e59f9dffa97cf141303f8a48c1398aa1dd033b",
@@ -213,11 +241,25 @@
         "stream_count": 1,
         "video_stream_count": 1
       },
+      "duration_reconciliation": {
+        "code": "DURATION_CONSISTENT",
+        "media_duration_seconds": 2.0,
+        "movie_duration_seconds": 2.0,
+        "movie_media_delta_seconds": 0.0,
+        "movie_media_rel_deviation": 0.0,
+        "movie_track_delta_seconds": 0.0,
+        "movie_track_rel_deviation": 0.0,
+        "rel_tolerance": 0.005,
+        "track_duration_seconds": 2.0,
+        "track_media_delta_seconds": 0.0,
+        "track_media_rel_deviation": 0.0
+      },
       "error_code": null,
       "error_message": null,
       "path": "cfr_30.mp4",
       "reason_codes": [
-        "FPS_CONSISTENT"
+        "FPS_CONSISTENT",
+        "DURATION_CONSISTENT"
       ],
       "reason_text": "Constant-like intervals (30.000 fps) agree with the declared 30.000 fps within configured tolerances. CFR_OK maps to ok by configuration.",
       "sha256": "d958b13a27217b917c8a0cfc3113150c83940bfcf90e7435445b64d7860b8f63",
@@ -289,11 +331,25 @@
         "stream_count": 2,
         "video_stream_count": 1
       },
+      "duration_reconciliation": {
+        "code": "DURATION_CONSISTENT",
+        "media_duration_seconds": 2.0,
+        "movie_duration_seconds": 2.0,
+        "movie_media_delta_seconds": 0.0,
+        "movie_media_rel_deviation": 0.0,
+        "movie_track_delta_seconds": 0.0,
+        "movie_track_rel_deviation": 0.0,
+        "rel_tolerance": 0.005,
+        "track_duration_seconds": 2.0,
+        "track_media_delta_seconds": 0.0,
+        "track_media_rel_deviation": 0.0
+      },
       "error_code": null,
       "error_message": null,
       "path": "moov_at_end.mp4",
       "reason_codes": [
-        "FPS_CONSISTENT"
+        "FPS_CONSISTENT",
+        "DURATION_CONSISTENT"
       ],
       "reason_text": "Constant-like intervals (30.000 fps) agree with the declared 30.000 fps within configured tolerances. CFR_OK maps to ok by configuration.",
       "sha256": "bc1dfc87b9ba11938741506648ca4729603d8ef8683b579d05757862bf8fc329",
@@ -365,13 +421,27 @@
         "stream_count": 1,
         "video_stream_count": 1
       },
+      "duration_reconciliation": {
+        "code": "DURATION_CONSISTENT",
+        "media_duration_seconds": 2.0,
+        "movie_duration_seconds": 2.0,
+        "movie_media_delta_seconds": 0.0,
+        "movie_media_rel_deviation": 0.0,
+        "movie_track_delta_seconds": 0.0,
+        "movie_track_rel_deviation": 0.0,
+        "rel_tolerance": 0.005,
+        "track_duration_seconds": 2.0,
+        "track_media_delta_seconds": 0.0,
+        "track_media_rel_deviation": 0.0
+      },
       "error_code": null,
       "error_message": null,
       "path": "vfr_jitter.mp4",
       "reason_codes": [
         "HIGH_JITTER",
         "HIGH_P95_P50_RATIO",
-        "UNSTABLE_INTERVALS"
+        "UNSTABLE_INTERVALS",
+        "DURATION_CONSISTENT"
       ],
       "reason_text": "Interval dispersion is high (jitter=0.504, p95/p50=3.000); variable frame rate is likely. VFR_SUSPECT maps to review by configuration.",
       "sha256": "980b195cce11b36e5d8517b79dbc5511abac5fff6cb3be6a0dfb0460c48170b1",

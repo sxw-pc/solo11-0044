@@ -6,6 +6,19 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+DEFAULT_DURATION_REL_TOLERANCE = 0.005
+
+DURATION_CONSISTENT = "DURATION_CONSISTENT"
+DURATION_MOVIE_SHORTER = "DURATION_MOVIE_SHORTER"
+DURATION_TRACK_SHORTER = "DURATION_TRACK_SHORTER"
+DURATION_TRACK_INCONSISTENT = "DURATION_TRACK_INCONSISTENT"
+DURATION_CODES = (
+    DURATION_CONSISTENT,
+    DURATION_MOVIE_SHORTER,
+    DURATION_TRACK_SHORTER,
+    DURATION_TRACK_INCONSISTENT,
+)
+
 
 @dataclass(frozen=True)
 class Thresholds:
@@ -17,6 +30,7 @@ class Thresholds:
     vfr_jitter_threshold: float
     vfr_p95_p50_threshold: float
     mismatch_review_abs_fps: float
+    duration_rel_tolerance: float = DEFAULT_DURATION_REL_TOLERANCE
 
 
 @dataclass(frozen=True)
@@ -30,6 +44,8 @@ class TrackInfo:
     height: int = 0
     stts_entries: tuple[tuple[int, int], ...] = ()
     ctts_version: int | None = None
+    # tkhd duration, expressed in the *movie* timescale; 0 when no tkhd box.
+    tkhd_duration_ticks: int = 0
 
     @property
     def duration_seconds(self) -> float:
@@ -48,6 +64,7 @@ class TrackInfo:
             "width": self.width,
             "height": self.height,
             "ctts_version": self.ctts_version,
+            "tkhd_duration_ticks": self.tkhd_duration_ticks,
         }
 
 

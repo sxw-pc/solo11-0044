@@ -85,6 +85,7 @@ make demo    # 生成 fixture -> 整批分析 -> 打印摘要和报告路径
 | `thresholds.vfr_jitter_threshold` | float | `0.08` | 抖动系数阈值 |
 | `thresholds.vfr_p95_p50_threshold` | float | `1.5` | p95/p50 比值阈值 |
 | `thresholds.mismatch_review_abs_fps` | float | `0.02` | CFR_MISMATCH 升级为 review 的 FPS 偏差阈值 |
+| `thresholds.duration_rel_tolerance` | float | `0.005` | mvhd/tkhd/stts 三方时长对账的相对偏差容差（可选，缺省即默认值） |
 | `classification.cfr_ok` | str | `ok` | 判定到分档的映射 |
 | `classification.cfr_mismatch` | str | `review` | 同上 |
 | `classification.vfr_suspect` | str | `review` | 同上 |
@@ -115,6 +116,25 @@ make demo    # 生成 fixture -> 整批分析 -> 打印摘要和报告路径
 - `classification`：`ok` / `review` / `reject` / `error`。
 
 `ok` / `review` / `reject` 的映射来自配置。相同输入、相同配置和相同排序规则产生相同结论；批处理按报告相对路径排序，不使用随机数或当前时间参与分类。
+
+### 时长对账（duration_reconciliation）
+
+除帧率判定外，每个成功分析的文件还带一个 `duration_reconciliation` 块，交叉校验三处时长声明：
+
+- `movie_duration_seconds`：`mvhd` 影片时长（movie timescale）；
+- `track_duration_seconds`：主力视频轨 `tkhd` 时长（同样以 movie timescale 表示，统一基准后换算为秒）；
+- `media_duration_seconds`：由 `stts` 累计得到的媒体时长（media timescale），取 **DTS 累计结束时刻**（所有样本 delta 之和），而非 PTS 跨度——带 `ctts` 组合偏移或 PTS 起点非零的素材不会因此被误判为偏短。
+
+块内给出两两差值（`*_delta_seconds`）与相对偏差（`*_rel_deviation`），并按 `thresholds.duration_rel_tolerance` 得出一个稳定结论码，并入 `reason_codes`：
+
+| 结论码 | 含义 |
+| --- | --- |
+| `DURATION_CONSISTENT` | 三方时长在容差内一致 |
+| `DURATION_MOVIE_SHORTER` | `mvhd` 影片时长明显短于轨道/媒体时长（影片时长被截短） |
+| `DURATION_TRACK_SHORTER` | 轨道与媒体时长一致，但明显短于 `mvhd` 影片时长 |
+| `DURATION_TRACK_INCONSISTENT` | `tkhd` 轨道时长与 `stts` 媒体时长不一致（tkhd 被夸大或截短） |
+
+该对账只扩充 `reason_codes`，不改变上述四类 `verdict` 的语义与分档。
 
 ---
 
@@ -238,11 +258,11 @@ python -m pytest -q
 
 以下数据来自当前仓库的最终自检：
 
-- Python 源文件数（含测试与 fixture 生成器）：**41**
-- Python 总行数（`find fpsprobe fixtures tests -name '*.py' | xargs wc -l`）：**4296**
-- 最大单文件行数：**296**（`fpsprobe/store/ledger.py`）
+- Python 源文件数（含测试与 fixture 生成器）：**42**
+- Python 总行数（`find fpsprobe fixtures tests -name '*.py' | xargs wc -l`）：**4582**
+- 最大单文件行数：**297**（`fpsprobe/store/ledger.py`）
 - 全部单文件 ≤ 300 行
-- `pytest -q`：**56 passed**
+- `pytest -q`：**64 passed**
 - `ruff check fpsprobe fixtures tests`（项目配置）：通过
 
 fixture sha256（两次独立生成一致）：

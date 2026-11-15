@@ -169,9 +169,10 @@ def _read_track(
         handler = parse_handler(read_payload(stream, hdlr))
     track_id = fallback_id
     width = height = 0
+    tkhd_duration = 0
     tkhd = find_child(stream, trak, "tkhd")
     if tkhd is not None:
-        track_id, _track_duration, (width, height) = parse_tkhd(
+        track_id, tkhd_duration, (width, height) = parse_tkhd(
             read_payload(stream, tkhd)
         )
     stbl = find_child(stream, mdia, "minf")
@@ -200,6 +201,7 @@ def _read_track(
         height=height,
         stts_entries=tuple(stts_entries),
         ctts_version=ctts[0] if ctts is not None else None,
+        tkhd_duration_ticks=tkhd_duration,
     )
     return info, _build_timestamps(info, stts_entries, ctts)
 

@@ -30,6 +30,9 @@ class TrackSpec:
     width: int = 0
     height: int = 0
     channels: int = 2
+    # Optional tkhd duration override in movie-timescale units; when None the
+    # tkhd duration is derived from the stts accumulation (consistent file).
+    tkhd_duration: int | None = None
 
     @property
     def sample_count(self) -> int:
@@ -62,7 +65,10 @@ def _mvhd(timescale: int, duration: int, next_track_id: int) -> bytes:
 
 
 def _tkhd(track: TrackSpec, movie_timescale: int) -> bytes:
-    duration = round(track.duration_seconds * movie_timescale)
+    if track.tkhd_duration is not None:
+        duration = track.tkhd_duration
+    else:
+        duration = round(track.duration_seconds * movie_timescale)
     volume = 0x0100 if track.handler == "soun" else 0
     body = struct.pack(">IIIII", 0, 0, track.track_id, 0, duration)
     body += b"\x00" * 8
