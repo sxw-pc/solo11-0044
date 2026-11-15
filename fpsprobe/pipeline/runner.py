@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from ..analysis.classify import classify
-from ..analysis.consistency import evaluate_consistency
+from ..analysis.consistency import evaluate_consistency, evaluate_track_timing
 from ..analysis.fps_stats import describe, histogram
 from ..analysis.timestamps import (
     non_positive_indices,
@@ -16,10 +16,11 @@ from ..analysis.timestamps import (
     ticks_to_seconds,
 )
 from ..config import Config
+from ..container.base import recommend_primary_track
 from ..container.ffprobe_adapter import FfprobeAdapter
 from ..container.mp4probe import probe_mp4
 from ..errors import FpsProbeError
-from ..models import FileOutcome, ProbeResult
+from ..models import FileOutcome, ProbeResult, TrackInfo, TrackTimestamps
 
 WINDOWS_ABSOLUTE = re.compile(r"^[A-Za-z]:[\\/]")
 
@@ -57,6 +58,7 @@ def _error_entry(
         "error_message": error.message,
         "container": None,
         "timestamps": None,
+        "track_arbitration": None,
         "verdict": None,
         "reason_codes": ["PROBE_ERROR"],
         "reason_text": error.message,
@@ -87,6 +89,99 @@ def _container_block(probe: ProbeResult) -> dict[str, Any]:
         "primary_track_duration_seconds": primary.duration_seconds,
         "frame_count": probe.primary_timestamps.frame_count,
         "moov_at_end": probe.moov_at_end,
+    }
+
+
+def _track_timestamps(probe: ProbeResult, track_id: int) -> TrackTimestamps | None:
+    """Per-track timeline; the configured primary always has one."""
+    timestamps = probe.timestamps_by_track.get(track_id)
+    if timestamps is None and track_id == probe.primary_track.track_id:
+        timestamps = probe.primary_timestamps
+    return timestamps
+
+
+def _unassessed_track_entry(
+    track: TrackInfo, declared_fps: float | None
+) -> dict[str, Any]:
+    return {
+        "track_id": track.track_id,
+        "timescale": track.timescale,
+        "sample_count": track.sample_count,
+        "duration_seconds": track.duration_seconds,
+        "width": track.width,
+        "height": track.height,
+        "declared_fps": declared_fps,
+        "measured_fps": None,
+        "fps_deviation": None,
+        "fps_deviation_rel": None,
+        "fps_deviation_band": None,
+        "interval_count": 0,
+        "non_positive_count": 0,
+        "max_delta_rel_deviation": None,
+        "jitter": None,
+        "p95_p50": None,
+        "stable": False,
+        "verdict": None,
+        "declared_status": "missing" if declared_fps is None else "unjudged",
+        "usability": "unknown",
+        "reason_codes": ["TIMESTAMPS_UNAVAILABLE"],
+        "reason_text": "The adapter did not expose a timing table for this track.",
+    }
+
+
+def _track_arbitration_block(
+    probe: ProbeResult, config: Config, strategy: str | int
+) -> dict[str, Any]:
+    """Assess every video track and recommend a primary, deterministically.
+
+    Declared rates use the same movie-duration basis as the primary-track
+    analysis, so the per-track verdict for the configured primary always
+    agrees with the top-level verdict of this entry.
+    """
+    movie_seconds = probe.movie_duration_seconds
+    assessments: list[dict[str, Any]] = []
+    for track in probe.video_tracks:
+        declared = (
+            track.sample_count / movie_seconds if movie_seconds > 0 else None
+        )
+        timestamps = _track_timestamps(probe, track.track_id)
+        if timestamps is None:
+            entry = _unassessed_track_entry(track, declared)
+        else:
+            timing = evaluate_track_timing(
+                declared,
+                timestamps.deltas_ticks,
+                track.timescale,
+                config.thresholds,
+            )
+            entry = {
+                "track_id": track.track_id,
+                "timescale": track.timescale,
+                "sample_count": track.sample_count,
+                "duration_seconds": track.duration_seconds,
+                "width": track.width,
+                "height": track.height,
+                **timing,
+            }
+        entry["is_configured_primary"] = track.track_id == probe.primary_track.track_id
+        assessments.append(entry)
+
+    recommendation = recommend_primary_track(assessments)
+    recommended_id = recommendation["recommended_track_id"]
+    for entry in assessments:
+        entry["is_recommended"] = entry["track_id"] == recommended_id
+    matches = recommended_id == probe.primary_track.track_id
+    reason_codes = list(recommendation["reason_codes"])
+    if not matches:
+        reason_codes.append("STRATEGY_DIFFERS_FROM_RECOMMENDATION")
+    return {
+        "strategy": strategy,
+        "configured_track_id": probe.primary_track.track_id,
+        "recommended_track_id": recommended_id,
+        "strategy_matches_recommendation": matches,
+        "reason_codes": reason_codes,
+        "reason_text": recommendation["reason_text"],
+        "tracks": assessments,
     }
 
 
@@ -169,6 +264,7 @@ def process_file(
         "error_message": None,
         "container": _container_block(probe),
         "timestamps": timestamps_block,
+        "track_arbitration": _track_arbitration_block(probe, config, strategy),
         "verdict": consistency["verdict"],
         "reason_codes": reason_codes,
         "reason_text": reason_text,

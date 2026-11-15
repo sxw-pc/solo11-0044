@@ -116,6 +116,52 @@
         ],
         "p95_p50": 1.0999999999999943
       },
+      "track_arbitration": {
+        "configured_track_id": 1,
+        "reason_codes": [
+          "NO_USABLE_TRACK",
+          "STRATEGY_DIFFERS_FROM_RECOMMENDATION"
+        ],
+        "reason_text": "No video track is usable: every track has too few samples, non-positive intervals, or no readable timing table.",
+        "recommended_track_id": null,
+        "strategy": "first_video",
+        "strategy_matches_recommendation": false,
+        "tracks": [
+          {
+            "declared_fps": 30.0,
+            "declared_status": "unjudged",
+            "duration_seconds": 2.0,
+            "fps_deviation": 0.0,
+            "fps_deviation_band": {
+              "max_rel": 0.0,
+              "min_rel": -0.6666666666666666
+            },
+            "fps_deviation_rel": 0.0,
+            "height": 360,
+            "interval_count": 59,
+            "is_configured_primary": true,
+            "is_recommended": false,
+            "jitter": 0.4509876168016973,
+            "max_delta_rel_deviation": 2.0,
+            "measured_fps": 30.0,
+            "non_positive_count": 3,
+            "p95_p50": 1.0999999999999943,
+            "reason_codes": [
+              "TIMESTAMP_REVERSAL",
+              "DUPLICATE_TIMESTAMP",
+              "NON_POSITIVE_DELTA"
+            ],
+            "reason_text": "3 non-positive interval(s) found at indices [9, 11, 13]; 1 reversal(s), 2 duplicate(s).",
+            "sample_count": 60,
+            "stable": false,
+            "timescale": 30000,
+            "track_id": 1,
+            "usability": "unusable",
+            "verdict": "TIMESTAMP_BROKEN",
+            "width": 640
+          }
+        ]
+      },
       "verdict": "TIMESTAMP_BROKEN"
     },
     {
@@ -193,6 +239,49 @@
         "non_positive_indices": [],
         "p95_p50": 1.0
       },
+      "track_arbitration": {
+        "configured_track_id": 1,
+        "reason_codes": [
+          "RECOMMENDED_STABLE_DECLARED_MISMATCH"
+        ],
+        "reason_text": "Track 1 has stable intervals and the best declared-rate agreement among 1 candidate(s).",
+        "recommended_track_id": 1,
+        "strategy": "first_video",
+        "strategy_matches_recommendation": true,
+        "tracks": [
+          {
+            "declared_fps": 30.0,
+            "declared_status": "mismatch",
+            "duration_seconds": 2.002,
+            "fps_deviation": -0.02997002997003051,
+            "fps_deviation_band": {
+              "max_rel": -0.000999000999001017,
+              "min_rel": -0.000999000999001017
+            },
+            "fps_deviation_rel": 0.000999000999001017,
+            "height": 720,
+            "interval_count": 59,
+            "is_configured_primary": true,
+            "is_recommended": true,
+            "jitter": 0.0,
+            "max_delta_rel_deviation": 0.0,
+            "measured_fps": 29.97002997002997,
+            "non_positive_count": 0,
+            "p95_p50": 1.0,
+            "reason_codes": [
+              "DECLARED_FPS_MISMATCH"
+            ],
+            "reason_text": "Stable intervals measured 29.970 fps, but the container declares 30.000 fps (delta 0.030).",
+            "sample_count": 60,
+            "stable": true,
+            "timescale": 30000,
+            "track_id": 1,
+            "usability": "usable",
+            "verdict": "CFR_MISMATCH",
+            "width": 1280
+          }
+        ]
+      },
       "verdict": "CFR_MISMATCH"
     },
     {
@@ -268,6 +357,49 @@
         "non_positive_count": 0,
         "non_positive_indices": [],
         "p95_p50": 1.0
+      },
+      "track_arbitration": {
+        "configured_track_id": 1,
+        "reason_codes": [
+          "RECOMMENDED_STABLE_CONSISTENT"
+        ],
+        "reason_text": "Track 1 has stable intervals and the best declared-rate agreement among 1 candidate(s).",
+        "recommended_track_id": 1,
+        "strategy": "first_video",
+        "strategy_matches_recommendation": true,
+        "tracks": [
+          {
+            "declared_fps": 30.0,
+            "declared_status": "consistent",
+            "duration_seconds": 2.0,
+            "fps_deviation": 0.0,
+            "fps_deviation_band": {
+              "max_rel": 0.0,
+              "min_rel": 0.0
+            },
+            "fps_deviation_rel": 0.0,
+            "height": 360,
+            "interval_count": 59,
+            "is_configured_primary": true,
+            "is_recommended": true,
+            "jitter": 0.0,
+            "max_delta_rel_deviation": 0.0,
+            "measured_fps": 30.0,
+            "non_positive_count": 0,
+            "p95_p50": 1.0,
+            "reason_codes": [
+              "FPS_CONSISTENT"
+            ],
+            "reason_text": "Constant-like intervals (30.000 fps) agree with the declared 30.000 fps within configured tolerances.",
+            "sample_count": 60,
+            "stable": true,
+            "timescale": 30000,
+            "track_id": 1,
+            "usability": "usable",
+            "verdict": "CFR_OK",
+            "width": 640
+          }
+        ]
       },
       "verdict": "CFR_OK"
     },
@@ -345,7 +477,380 @@
         "non_positive_indices": [],
         "p95_p50": 1.0
       },
+      "track_arbitration": {
+        "configured_track_id": 1,
+        "reason_codes": [
+          "RECOMMENDED_STABLE_CONSISTENT"
+        ],
+        "reason_text": "Track 1 has stable intervals and the best declared-rate agreement among 1 candidate(s).",
+        "recommended_track_id": 1,
+        "strategy": "first_video",
+        "strategy_matches_recommendation": true,
+        "tracks": [
+          {
+            "declared_fps": 30.0,
+            "declared_status": "consistent",
+            "duration_seconds": 2.0,
+            "fps_deviation": 0.0,
+            "fps_deviation_band": {
+              "max_rel": 0.0,
+              "min_rel": 0.0
+            },
+            "fps_deviation_rel": 0.0,
+            "height": 360,
+            "interval_count": 59,
+            "is_configured_primary": true,
+            "is_recommended": true,
+            "jitter": 0.0,
+            "max_delta_rel_deviation": 0.0,
+            "measured_fps": 30.0,
+            "non_positive_count": 0,
+            "p95_p50": 1.0,
+            "reason_codes": [
+              "FPS_CONSISTENT"
+            ],
+            "reason_text": "Constant-like intervals (30.000 fps) agree with the declared 30.000 fps within configured tolerances.",
+            "sample_count": 60,
+            "stable": true,
+            "timescale": 30000,
+            "track_id": 1,
+            "usability": "usable",
+            "verdict": "CFR_OK",
+            "width": 640
+          }
+        ]
+      },
       "verdict": "CFR_OK"
+    },
+    {
+      "classification": "ok",
+      "container": {
+        "adapter": "builtin",
+        "audio_stream_count": 1,
+        "brand": "isom",
+        "declared_fps": 30.0,
+        "format": "mp4",
+        "frame_count": 60,
+        "moov_at_end": false,
+        "movie_duration_seconds": 2.0,
+        "movie_timescale": 1000,
+        "primary_track_duration_seconds": 2.0,
+        "primary_track_id": 1,
+        "primary_track_timescale": 30000,
+        "stream_count": 5,
+        "video_stream_count": 4
+      },
+      "error_code": null,
+      "error_message": null,
+      "path": "multi_track.mp4",
+      "reason_codes": [
+        "FPS_CONSISTENT"
+      ],
+      "reason_text": "Constant-like intervals (30.000 fps) agree with the declared 30.000 fps within configured tolerances. CFR_OK maps to ok by configuration.",
+      "sha256": "d2147c0c6a493b84a84f5727fe3dbc6bc053497dc07584f3d3fdc1896c84ef07",
+      "size_bytes": 2456,
+      "status": "ok",
+      "timestamps": {
+        "delta_count": 59,
+        "delta_seconds": {
+          "count": 59,
+          "jitter": 0.0,
+          "max": 0.03333333333333333,
+          "mean": 0.03333333333333333,
+          "median": 0.03333333333333333,
+          "min": 0.03333333333333333,
+          "p95": 0.03333333333333333,
+          "stdev": 0.0
+        },
+        "delta_ticks": {
+          "count": 59,
+          "jitter": 0.0,
+          "max": 1000.0,
+          "mean": 1000.0,
+          "median": 1000.0,
+          "min": 1000.0,
+          "p95": 1000.0,
+          "stdev": 0.0
+        },
+        "first_pts_seconds": 0.0,
+        "first_pts_ticks": 0,
+        "frame_count": 60,
+        "histogram": {
+          "bucket_count": 1,
+          "buckets": [
+            {
+              "count": 59,
+              "lower": 1000.0,
+              "upper": 1000.0
+            }
+          ],
+          "max": 1000.0,
+          "min": 1000.0,
+          "total": 59
+        },
+        "jitter": 0.0,
+        "last_pts_seconds": 1.9666666666666666,
+        "last_pts_ticks": 59000,
+        "measured_fps": 30.0,
+        "non_positive_count": 0,
+        "non_positive_indices": [],
+        "p95_p50": 1.0
+      },
+      "track_arbitration": {
+        "configured_track_id": 1,
+        "reason_codes": [
+          "RECOMMENDED_STABLE_CONSISTENT"
+        ],
+        "reason_text": "Track 1 has stable intervals and the best declared-rate agreement among 2 candidate(s).",
+        "recommended_track_id": 1,
+        "strategy": "first_video",
+        "strategy_matches_recommendation": true,
+        "tracks": [
+          {
+            "declared_fps": 30.0,
+            "declared_status": "consistent",
+            "duration_seconds": 2.0,
+            "fps_deviation": 0.0,
+            "fps_deviation_band": {
+              "max_rel": 0.0,
+              "min_rel": 0.0
+            },
+            "fps_deviation_rel": 0.0,
+            "height": 360,
+            "interval_count": 59,
+            "is_configured_primary": true,
+            "is_recommended": true,
+            "jitter": 0.0,
+            "max_delta_rel_deviation": 0.0,
+            "measured_fps": 30.0,
+            "non_positive_count": 0,
+            "p95_p50": 1.0,
+            "reason_codes": [
+              "FPS_CONSISTENT"
+            ],
+            "reason_text": "Constant-like intervals (30.000 fps) agree with the declared 30.000 fps within configured tolerances.",
+            "sample_count": 60,
+            "stable": true,
+            "timescale": 30000,
+            "track_id": 1,
+            "usability": "usable",
+            "verdict": "CFR_OK",
+            "width": 640
+          },
+          {
+            "declared_fps": 24.0,
+            "declared_status": "consistent",
+            "duration_seconds": 2.0,
+            "fps_deviation": 0.0,
+            "fps_deviation_band": {
+              "max_rel": 0.0,
+              "min_rel": 0.0
+            },
+            "fps_deviation_rel": 0.0,
+            "height": 720,
+            "interval_count": 47,
+            "is_configured_primary": false,
+            "is_recommended": false,
+            "jitter": 0.0,
+            "max_delta_rel_deviation": 0.0,
+            "measured_fps": 24.0,
+            "non_positive_count": 0,
+            "p95_p50": 1.0,
+            "reason_codes": [
+              "FPS_CONSISTENT"
+            ],
+            "reason_text": "Constant-like intervals (24.000 fps) agree with the declared 24.000 fps within configured tolerances.",
+            "sample_count": 48,
+            "stable": true,
+            "timescale": 24000,
+            "track_id": 2,
+            "usability": "usable",
+            "verdict": "CFR_OK",
+            "width": 1280
+          },
+          {
+            "declared_fps": 29.5,
+            "declared_status": "unjudged",
+            "duration_seconds": 1.9333333333333333,
+            "fps_deviation": 1.026315789473685,
+            "fps_deviation_band": {
+              "max_rel": 0.01694915254237288,
+              "min_rel": 0.01694915254237288
+            },
+            "fps_deviation_rel": 0.034790365744870676,
+            "height": 360,
+            "interval_count": 58,
+            "is_configured_primary": false,
+            "is_recommended": false,
+            "jitter": 0.13245323570650439,
+            "max_delta_rel_deviation": 1.0,
+            "measured_fps": 30.526315789473685,
+            "non_positive_count": 1,
+            "p95_p50": 1.0,
+            "reason_codes": [
+              "DUPLICATE_TIMESTAMP",
+              "NON_POSITIVE_DELTA"
+            ],
+            "reason_text": "1 non-positive interval(s) found at indices [20]; 0 reversal(s), 1 duplicate(s).",
+            "sample_count": 59,
+            "stable": false,
+            "timescale": 30000,
+            "track_id": 3,
+            "usability": "unusable",
+            "verdict": "TIMESTAMP_BROKEN",
+            "width": 640
+          },
+          {
+            "declared_fps": 1.0,
+            "declared_status": "mismatch",
+            "duration_seconds": 0.06666666666666667,
+            "fps_deviation": 29.0,
+            "fps_deviation_band": {
+              "max_rel": 29.0,
+              "min_rel": 29.0
+            },
+            "fps_deviation_rel": 29.0,
+            "height": 120,
+            "interval_count": 1,
+            "is_configured_primary": false,
+            "is_recommended": false,
+            "jitter": 0.0,
+            "max_delta_rel_deviation": 0.0,
+            "measured_fps": 30.0,
+            "non_positive_count": 0,
+            "p95_p50": 1.0,
+            "reason_codes": [
+              "DECLARED_FPS_MISMATCH",
+              "INSUFFICIENT_SAMPLES"
+            ],
+            "reason_text": "Stable intervals measured 30.000 fps, but the container declares 1.000 fps (delta 29.000).",
+            "sample_count": 2,
+            "stable": true,
+            "timescale": 30000,
+            "track_id": 4,
+            "usability": "unusable",
+            "verdict": "CFR_MISMATCH",
+            "width": 160
+          }
+        ]
+      },
+      "verdict": "CFR_OK"
+    },
+    {
+      "classification": "review",
+      "container": {
+        "adapter": "builtin",
+        "audio_stream_count": 0,
+        "brand": "isom",
+        "declared_fps": null,
+        "format": "mp4",
+        "frame_count": 60,
+        "moov_at_end": false,
+        "movie_duration_seconds": 0.0,
+        "movie_timescale": 1000,
+        "primary_track_duration_seconds": 2.0,
+        "primary_track_id": 1,
+        "primary_track_timescale": 30000,
+        "stream_count": 1,
+        "video_stream_count": 1
+      },
+      "error_code": null,
+      "error_message": null,
+      "path": "no_declared_fps.mp4",
+      "reason_codes": [
+        "DECLARED_FPS_MISSING"
+      ],
+      "reason_text": "Intervals are stable at 30.000 fps, but the container does not expose a usable declared frame rate. CFR_MISMATCH with no usable FPS delta; configured mismatch mapping applies (review).",
+      "sha256": "8c606040e92cfffa739fae536f95c2e3373fcde573a3e1c5c5d8e4536d5d9afe",
+      "size_bytes": 631,
+      "status": "ok",
+      "timestamps": {
+        "delta_count": 59,
+        "delta_seconds": {
+          "count": 59,
+          "jitter": 0.0,
+          "max": 0.03333333333333333,
+          "mean": 0.03333333333333333,
+          "median": 0.03333333333333333,
+          "min": 0.03333333333333333,
+          "p95": 0.03333333333333333,
+          "stdev": 0.0
+        },
+        "delta_ticks": {
+          "count": 59,
+          "jitter": 0.0,
+          "max": 1000.0,
+          "mean": 1000.0,
+          "median": 1000.0,
+          "min": 1000.0,
+          "p95": 1000.0,
+          "stdev": 0.0
+        },
+        "first_pts_seconds": 0.0,
+        "first_pts_ticks": 0,
+        "frame_count": 60,
+        "histogram": {
+          "bucket_count": 1,
+          "buckets": [
+            {
+              "count": 59,
+              "lower": 1000.0,
+              "upper": 1000.0
+            }
+          ],
+          "max": 1000.0,
+          "min": 1000.0,
+          "total": 59
+        },
+        "jitter": 0.0,
+        "last_pts_seconds": 1.9666666666666666,
+        "last_pts_ticks": 59000,
+        "measured_fps": 30.0,
+        "non_positive_count": 0,
+        "non_positive_indices": [],
+        "p95_p50": 1.0
+      },
+      "track_arbitration": {
+        "configured_track_id": 1,
+        "reason_codes": [
+          "RECOMMENDED_STABLE_NO_DECLARED"
+        ],
+        "reason_text": "Track 1 has stable intervals and the best declared-rate agreement among 1 candidate(s).",
+        "recommended_track_id": 1,
+        "strategy": "first_video",
+        "strategy_matches_recommendation": true,
+        "tracks": [
+          {
+            "declared_fps": null,
+            "declared_status": "missing",
+            "duration_seconds": 2.0,
+            "fps_deviation": null,
+            "fps_deviation_band": null,
+            "fps_deviation_rel": null,
+            "height": 360,
+            "interval_count": 59,
+            "is_configured_primary": true,
+            "is_recommended": true,
+            "jitter": 0.0,
+            "max_delta_rel_deviation": 0.0,
+            "measured_fps": 30.0,
+            "non_positive_count": 0,
+            "p95_p50": 1.0,
+            "reason_codes": [
+              "DECLARED_FPS_MISSING"
+            ],
+            "reason_text": "Intervals are stable at 30.000 fps, but the container does not expose a usable declared frame rate.",
+            "sample_count": 60,
+            "stable": true,
+            "timescale": 30000,
+            "track_id": 1,
+            "usability": "usable",
+            "verdict": "CFR_MISMATCH",
+            "width": 640
+          }
+        ]
+      },
+      "verdict": "CFR_MISMATCH"
     },
     {
       "classification": "review",
@@ -458,6 +963,51 @@
         "non_positive_indices": [],
         "p95_p50": 3.0
       },
+      "track_arbitration": {
+        "configured_track_id": 1,
+        "reason_codes": [
+          "RECOMMENDED_DEGRADED_FALLBACK"
+        ],
+        "reason_text": "No fully stable video track exists; track 1 is the least degraded candidate.",
+        "recommended_track_id": 1,
+        "strategy": "first_video",
+        "strategy_matches_recommendation": true,
+        "tracks": [
+          {
+            "declared_fps": 30.0,
+            "declared_status": "unjudged",
+            "duration_seconds": 2.0,
+            "fps_deviation": 0.25641025641025905,
+            "fps_deviation_band": {
+              "max_rel": 1.0,
+              "min_rel": -0.3333333333333333
+            },
+            "fps_deviation_rel": 0.008547008547008635,
+            "height": 360,
+            "interval_count": 59,
+            "is_configured_primary": true,
+            "is_recommended": true,
+            "jitter": 0.5042010667949616,
+            "max_delta_rel_deviation": 2.0,
+            "measured_fps": 30.25641025641026,
+            "non_positive_count": 0,
+            "p95_p50": 3.0,
+            "reason_codes": [
+              "HIGH_JITTER",
+              "HIGH_P95_P50_RATIO",
+              "UNSTABLE_INTERVALS"
+            ],
+            "reason_text": "Interval dispersion is high (jitter=0.504, p95/p50=3.000); variable frame rate is likely.",
+            "sample_count": 60,
+            "stable": false,
+            "timescale": 30000,
+            "track_id": 1,
+            "usability": "degraded",
+            "verdict": "VFR_SUSPECT",
+            "width": 640
+          }
+        ]
+      },
       "verdict": "VFR_SUSPECT"
     }
   ],
@@ -470,14 +1020,14 @@
   },
   "summary": {
     "error": 0,
-    "ok": 2,
+    "ok": 3,
     "reject": 1,
-    "review": 2,
+    "review": 3,
     "source_dir": "fixtures/out",
-    "total_files": 5,
+    "total_files": 7,
     "verdicts": {
-      "CFR_MISMATCH": 1,
-      "CFR_OK": 2,
+      "CFR_MISMATCH": 2,
+      "CFR_OK": 3,
       "TIMESTAMP_BROKEN": 1,
       "VFR_SUSPECT": 1
     }

@@ -207,6 +207,21 @@ MOOV_AT_END = [
     TrackSpec(1, "vide", 30000, ((60, 1000),), width=640, height=360),
     TrackSpec(2, "soun", 48000, ((94, 1024),), channels=2),
 ]
+# Four video renditions plus audio: a clean 30 fps CFR track, a clean 24 fps
+# CFR track on a different timescale, a scrap track with a zero delta (a
+# duplicated presentation timestamp), and a two-frame track with too few
+# samples to judge.
+MULTI_TRACK = [
+    TrackSpec(1, "vide", 30000, ((60, 1000),), width=640, height=360),
+    TrackSpec(2, "vide", 24000, ((48, 1000),), width=1280, height=720),
+    TrackSpec(3, "vide", 30000, ((20, 1000), (1, 0), (38, 1000)), width=640, height=360),
+    TrackSpec(4, "vide", 30000, ((2, 1000),), width=160, height=120),
+    TrackSpec(5, "soun", 48000, ((94, 1024),), channels=2),
+]
+# Stable CFR intervals, but a zero movie duration hides the declared rate.
+NO_DECLARED = [
+    TrackSpec(1, "vide", 30000, ((60, 1000),), width=640, height=360),
+]
 
 
 def fixture_definitions() -> list[dict]:
@@ -241,6 +256,19 @@ def fixture_definitions() -> list[dict]:
             "tracks": MOOV_AT_END,
             "moov_at_end": True,
         },
+        {
+            "name": "multi_track.mp4",
+            "description": "four video tracks (CFR 30, CFR 24, broken scrap, tiny) plus audio",
+            "tracks": MULTI_TRACK,
+            "moov_at_end": False,
+        },
+        {
+            "name": "no_declared_fps.mp4",
+            "description": "stable CFR intervals but zero movie duration hides the declared rate",
+            "tracks": NO_DECLARED,
+            "moov_at_end": False,
+            "movie_duration_ms": 0,
+        },
     ]
 
 
@@ -251,7 +279,7 @@ def generate_fixtures(output_dir: str | Path) -> list[dict]:
     for definition in fixture_definitions():
         data = build_mp4(
             definition["tracks"],
-            movie_duration_ms=2000,
+            movie_duration_ms=definition.get("movie_duration_ms", 2000),
             moov_at_end=definition["moov_at_end"],
         )
         path = destination / definition["name"]

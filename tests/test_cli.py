@@ -53,7 +53,7 @@ def test_batch_writes_reports_and_db_override(tmp_path, fixture_dir, capsys):
     assert second["run_id"] != first["run_id"]
     with Ledger(override) as ledger:
         assert ledger.counts()["runs"] == 1
-        assert ledger.counts()["files"] == 5
+        assert ledger.counts()["files"] == 7
 
 
 def test_report_command_reads_ledger(tmp_path, fixture_dir, capsys):
@@ -74,7 +74,7 @@ def test_report_command_reads_ledger(tmp_path, fixture_dir, capsys):
     )
     report = json.loads(capsys.readouterr().out)
     assert code == 0
-    assert report["summary"]["total_files"] == 5
+    assert report["summary"]["total_files"] == 7
     assert set(report["run_meta"]) == {
         "run_id",
         "config_fingerprint",

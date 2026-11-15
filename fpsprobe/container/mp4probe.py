@@ -258,4 +258,5 @@ def probe_mp4(path: str | Path, primary_track: str | int = "first_video") -> Pro
         primary_timestamps=primary_timestamps,
         declared_fps=declared_fps,
         moov_at_end=moov_at_end,
+        timestamps_by_track=timestamps_by_id,
     )

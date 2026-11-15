@@ -129,9 +129,9 @@ def _selftest(_args: argparse.Namespace) -> int:
         markdown_report_name="report.md",
     )
     result = run_batch(config)
-    expected = {"total_files": 5, "ok": 2, "review": 2, "reject": 1, "error": 0}
+    expected = {"total_files": 7, "ok": 3, "review": 3, "reject": 1, "error": 0}
     actual = {key: result.summary.get(key) for key in expected}
-    passed = actual == expected and result.report["summary"]["total_files"] == 5
+    passed = actual == expected and result.report["summary"]["total_files"] == 7
     _emit({"selftest": "ok" if passed else "failed", "run_id": result.run_id, "summary": result.summary})
     if not passed:
         raise FpsProbeError(

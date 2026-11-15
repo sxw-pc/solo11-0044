@@ -8,6 +8,11 @@ from ..models import Thresholds
 from .fps_stats import describe, p95_p50_ratio
 from .timestamps import duplicate_indices, reversal_indices
 
+# A track needs at least this many frame intervals before its timing can be
+# judged stable enough to act on. Below the floor the track is reported but
+# never treated as a usable recommendation candidate.
+MIN_USABLE_INTERVALS = 8
+
 
 def _fmt(value: float | None) -> str:
     return "n/a" if value is None else f"{value:.3f}"
@@ -175,3 +180,93 @@ def evaluate_consistency(
         f"{_fmt(declared_fps)} fps within configured tolerances."
     )
     return result
+
+
+def _fps_deviation_band(
+    declared_fps: float | None,
+    deltas_ticks: Sequence[int],
+    timescale: int,
+) -> dict[str, float] | None:
+    """Spread of per-interval instantaneous FPS against the declared rate.
+
+    Every interval is converted to a per-second rate first
+    (``timescale / delta``), so tracks with different timescales are compared
+    on the same seconds basis instead of raw tick counts. Non-positive
+    intervals cannot yield a rate and are skipped; the caller still sees them
+    through ``non_positive_count``.
+    """
+    if declared_fps is None or declared_fps <= 0 or timescale <= 0:
+        return None
+    relatives = [
+        (timescale / float(delta) - declared_fps) / declared_fps
+        for delta in deltas_ticks
+        if int(delta) > 0
+    ]
+    if not relatives:
+        return None
+    return {"min_rel": min(relatives), "max_rel": max(relatives)}
+
+
+def evaluate_track_timing(
+    declared_fps: float | None,
+    deltas_ticks: Sequence[int],
+    timescale: int,
+    thresholds: Thresholds,
+) -> dict[str, Any]:
+    """Arbitration view of one video track: deviation band, stability, usability.
+
+    ``declared_fps`` must use the same movie-duration basis as the primary
+    track analysis so per-track conclusions cannot disagree with the
+    top-level verdict for the configured primary track.
+
+    Usability ladder (a track is reported, never silently dropped):
+
+    - ``unusable``: non-positive intervals present, or fewer than
+      ``MIN_USABLE_INTERVALS`` intervals — never a recommendation candidate.
+    - ``degraded``: enough samples and no non-positive intervals, but the
+      intervals are not stable within the CFR tolerance.
+    - ``usable``: stable intervals; a missing declared rate only changes how
+      the track ranks, it does not remove it from consideration.
+    """
+    base = evaluate_consistency(declared_fps, deltas_ticks, timescale, thresholds)
+    interval_count = len(deltas_ticks)
+    codes = list(base["reason_codes"])
+    too_few = interval_count < MIN_USABLE_INTERVALS
+    if too_few:
+        codes.append("INSUFFICIENT_SAMPLES")
+    if base["non_positive_count"] > 0 or too_few:
+        usability = "unusable"
+    elif not base["stable"]:
+        usability = "degraded"
+    else:
+        usability = "usable"
+
+    if declared_fps is None or declared_fps <= 0:
+        declared_status = "missing"
+    elif "FPS_CONSISTENT" in base["reason_codes"]:
+        declared_status = "consistent"
+    elif "DECLARED_FPS_MISMATCH" in base["reason_codes"]:
+        declared_status = "mismatch"
+    else:
+        declared_status = "unjudged"
+
+    return {
+        "declared_fps": base["declared_fps"],
+        "measured_fps": base["measured_fps"],
+        "fps_deviation": base["fps_delta"],
+        "fps_deviation_rel": base["fps_rel_delta"],
+        "fps_deviation_band": _fps_deviation_band(
+            declared_fps, deltas_ticks, timescale
+        ),
+        "interval_count": interval_count,
+        "non_positive_count": base["non_positive_count"],
+        "max_delta_rel_deviation": base["max_delta_rel_deviation"],
+        "jitter": base["jitter"],
+        "p95_p50": base["p95_p50"],
+        "stable": base["stable"],
+        "verdict": base["verdict"],
+        "declared_status": declared_status,
+        "usability": usability,
+        "reason_codes": codes,
+        "reason_text": base["reason_text"],
+    }

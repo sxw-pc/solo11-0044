@@ -85,6 +85,10 @@ class ProbeResult:
     declared_fps: float | None
     moov_at_end: bool
     adapter: str = "builtin"
+    # Per-track timelines keyed by track_id, when the adapter exposes them.
+    # The built-in MP4 reader fills this for every parsed track; optional
+    # adapters may only cover the primary track.
+    timestamps_by_track: dict[int, "TrackTimestamps"] = field(default_factory=dict)
 
     @property
     def movie_duration_seconds(self) -> float:
