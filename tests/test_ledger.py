@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from fpsprobe.errors import RunFinishedError
@@ -79,23 +81,33 @@ def test_file_rows_are_reused_across_runs_with_same_fingerprint(ledger, entry_fa
     assert ledger.counts()["file_verdicts"] == 2
 
 
-def test_timeline_above_threshold_stores_summary_only(ledger, entry_factory):
+def test_timeline_above_threshold_stores_exact_anchor_sample(ledger, entry_factory):
     run_id = ledger.create_run("fingerprint-b", run_id="run-large")
     file_id = ledger.upsert_file(run_id, "large.mp4", "e" * 64, 1000)
     entry = entry_factory("large.mp4")
     ledger.record_verdict(run_id, file_id, entry)
+    pts = list(range(0, 5000 * 1000, 1000))
+    deltas = [1000] * (len(pts) - 1)
     ledger.record_timeline(
-        run_id, file_id, 5000, 100, entry["timestamps"]["delta_ticks"], list(range(5000)), [1] * 4999
+        run_id, file_id, len(pts), 100, entry["timestamps"]["delta_ticks"], pts, deltas
     )
     row = ledger.conn.execute(
         "SELECT * FROM timeline_samples WHERE run_id=?", (run_id,)
     ).fetchone()
-    assert row["frame_count"] == 5000
-    assert row["stored_frame_count"] == 0
+    assert row["frame_count"] == len(pts)
+    assert row["stored_frame_count"] == 100
     assert row["truncated"] == 1
-    assert row["pts_ticks_json"] is None
-    assert row["deltas_ticks_json"] is None
-    assert row["summary_json"] is not None
+    stored_pts = json.loads(row["pts_ticks_json"])
+    stored_deltas = json.loads(row["deltas_ticks_json"])
+    assert len(stored_pts) == 100
+    assert stored_pts[0] == pts[0]
+    assert stored_pts[-1] == pts[-1]
+    summary = json.loads(row["summary_json"])
+    assert summary["original_frame_count"] == len(pts)
+    assert summary["stored_frame_count"] == 100
+    assert summary["truncated"] is True
+    assert summary["duration_deviation_ticks"] == 0
+    assert sum(stored_deltas) == stored_pts[-1] - stored_pts[0]
 
 
 def test_query_missing_run_is_none(ledger):

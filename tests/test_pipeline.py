@@ -76,6 +76,45 @@ def test_corrupt_file_is_recorded_without_aborting(
     assert result.exit_code == 0
 
 
+def test_batch_samples_timelines_beyond_detail_limit(default_config, tmp_path: Path):
+    config = replace(
+        default_config,
+        max_detail_frames=10,
+        report_dir=tmp_path / "sampled-out",
+        db_path=tmp_path / "sampled-out" / "ledger.db",
+    )
+    run_batch(config)
+    with Ledger(config.db_path) as ledger:
+        joined = ledger.conn.execute(
+            "SELECT f.path, t.*, v.payload_json FROM timeline_samples t "
+            "JOIN files f ON f.id = t.file_id "
+            "JOIN file_verdicts v ON v.file_id = t.file_id ORDER BY f.path"
+        ).fetchall()
+    assert len(joined) == 5
+    for row in joined:
+        summary = json.loads(row["summary_json"])
+        assert row["truncated"] == 1
+        assert row["frame_count"] == 60
+        assert row["stored_frame_count"] == 10
+        stored_pts = json.loads(row["pts_ticks_json"])
+        stored_deltas = json.loads(row["deltas_ticks_json"])
+        assert stored_pts[0] == 0
+        assert len(stored_pts) == 10
+        assert summary["original_frame_count"] == 60
+        assert summary["stored_frame_count"] == 10
+        assert summary["truncated"] is True
+        assert summary["duration_deviation_ticks"] == 0
+        assert (
+            summary["reconstructed_duration_ticks"]
+            == summary["original_duration_ticks"]
+            == stored_pts[-1] - stored_pts[0]
+        )
+        assert sum(stored_deltas) == stored_pts[-1] - stored_pts[0]
+        timestamps = json.loads(row["payload_json"])["timestamps"]
+        assert summary["non_positive_indices"] == timestamps["non_positive_indices"]
+        assert summary["non_positive_count"] == timestamps["non_positive_count"]
+
+
 def test_scan_inputs_is_stable_and_filtered(default_config):
     pairs = scan_inputs(default_config)
     names = [display for _path, display in pairs]

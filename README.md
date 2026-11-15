@@ -72,7 +72,7 @@ make demo    # 生成 fixture -> 整批分析 -> 打印摘要和报告路径
 | `include_suffixes` | list[str] | `.mp4/.m4v/.mov` | 参与扫描的扩展名 |
 | `ignore_globs` | list[str] | 隐藏文件与 `*.tmp` | 忽略模式，匹配相对路径或文件名 |
 | `primary_track` | str/int | `first_video` | 主力视频轨策略：`first_video`、`longest_video` 或视频轨的 0 基索引 |
-| `max_detail_frames` | int | `240` | 逐帧明细入库阈值；超过后 `timeline_samples` 只存摘要 |
+| `max_detail_frames` | int | `240` | 逐帧明细入库阈值；超过后 `timeline_samples` 存等距抽样明细与可校验的重建摘要 |
 | `histogram_buckets` | int | `8` | delta 直方图最大桶数 |
 | `adapter` | str | `builtin` | `builtin`（默认）或可选的 `ffprobe` |
 | `report.output_dir` | str | `workdir` | 报告目录 |
@@ -157,7 +157,16 @@ make demo    # 生成 fixture -> 整批分析 -> 打印摘要和报告路径
 | `runs` | `run_id`、`config_fingerprint`、`started_at`、`finished_at`、`summary_json` | 一次批处理的生命周期与汇总 |
 | `files` | `path`、`sha256`、`size_bytes`、`config_fingerprint`、`status`、`error_code` | 文件事实台账；唯一键 `(path, sha256, config_fingerprint)` |
 | `file_verdicts` | `run_id`、`file_id`、`verdict`、`classification`、`reason_codes`、`payload_json` | 每个 run 中每个文件的完整判定 |
-| `timeline_samples` | `run_id`、`file_id`、`frame_count`、`stored_frame_count`、`truncated`、`summary_json` | 有界时间线明细；帧数超过 `max_detail_frames` 时只存摘要 |
+| `timeline_samples` | `run_id`、`file_id`、`frame_count`、`stored_frame_count`、`truncated`、`summary_json` | 有界时间线明细；帧数超过 `max_detail_frames` 时存等距抽样明细（保留首尾锚点）与重建摘要 |
+
+时间线抽样语义（`fpsprobe/analysis/sampling.py`）：
+
+- 抽样只丢弃中间帧，**首尾两帧的绝对 PTS 锚点必须保留**，因此由抽样点重建的时长与原始时长**精确相等**（`duration_deviation_ticks` 恒为 `0`，不是近似容差）；
+- `truncated` 严格等于 `frame_count > max_detail_frames`，与最终保留多少样本无关；
+- `max_detail_frames = 0` 时仍保留首尾两个样本以满足锚点约束；
+- 所有非正 delta 的索引始终完整写入 `summary_json` 的 `non_positive_indices`，与抽样无关；
+- 摘要可回答：`original_frame_count`（原始帧数）、`stored_frame_count`（实际存储帧数）、`truncated`、`original_duration_ticks` / `reconstructed_duration_ticks` / `duration_deviation_ticks`、`non_positive_count` / `non_positive_indices`；
+- 未超过上限时行为不变：原始 PTS/delta 原样入库，`summary_json` 仍是原有统计摘要。
 
 幂等行为：
 
@@ -238,11 +247,11 @@ python -m pytest -q
 
 以下数据来自当前仓库的最终自检：
 
-- Python 源文件数（含测试与 fixture 生成器）：**41**
-- Python 总行数（`find fpsprobe fixtures tests -name '*.py' | xargs wc -l`）：**4296**
-- 最大单文件行数：**296**（`fpsprobe/store/ledger.py`）
+- Python 源文件数（含测试与 fixture 生成器）：**43**
+- Python 总行数（`find fpsprobe fixtures tests -name '*.py' | xargs wc -l`）：**4889**
+- 最大单文件行数：**298**（`fpsprobe/store/ledger.py`）
 - 全部单文件 ≤ 300 行
-- `pytest -q`：**56 passed**
+- `pytest -q`：**85 passed**
 - `ruff check fpsprobe fixtures tests`（项目配置）：通过
 
 fixture sha256（两次独立生成一致）：

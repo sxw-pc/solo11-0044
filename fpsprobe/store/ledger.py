@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from .. import __version__
+from ..analysis.sampling import build_timeline_record
 from ..errors import LedgerError, RunFinishedError, RunNotFound
 from .schema import connect
 
@@ -161,10 +162,11 @@ class Ledger:
         pts_ticks: list[int] | None,
         deltas_ticks: list[int] | None,
     ) -> None:
-        """Store raw points only for short files; large files keep a summary only."""
+        """Short files keep raw points; long files keep exact-anchor samples."""
         self._ensure_mutable(run_id)
-        truncated = int(frame_count) > int(max_detail_frames)
-        stored_count = 0 if truncated else len(pts_ticks or [])
+        record = build_timeline_record(
+            frame_count, max_detail_frames, stats, pts_ticks, deltas_ticks
+        )
         self.conn.execute(
             "INSERT INTO timeline_samples(run_id, file_id, frame_count, "
             "stored_frame_count, truncated, summary_json, pts_ticks_json, "
@@ -178,11 +180,11 @@ class Ledger:
                 run_id,
                 file_id,
                 int(frame_count),
-                stored_count,
-                1 if truncated else 0,
-                _dump(stats),
-                None if truncated else _dump(pts_ticks or []),
-                None if truncated else _dump(deltas_ticks or []),
+                record.stored_frame_count,
+                1 if record.truncated else 0,
+                _dump(record.summary),
+                _dump(record.pts_ticks),
+                _dump(record.deltas_ticks),
             ),
         )
         self.conn.commit()
