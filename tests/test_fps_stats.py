@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from fpsprobe.analysis.fps_stats import describe, histogram, p95_p50_ratio
+from fpsprobe.analysis.fps_stats import (
+    describe,
+    estimate_measured_fps,
+    histogram,
+    p95_p50_ratio,
+)
 
 
 def test_empty_sequence_is_safe():
@@ -64,3 +69,58 @@ def test_histogram_rejects_invalid_bucket_count():
         histogram([1], 0)
     with pytest.raises(ValueError):
         histogram([1], True)
+
+
+def test_estimate_stable_selects_candidate_interval():
+    block = estimate_measured_fps(describe([1000] * 59), 30000, 30.0, stable=True)
+    assert block["selected_estimator"] == "candidate_interval"
+    assert block["selected_measured_fps"] == 30.0
+    assert block["stable_segment_count"] == 59
+    candidate = block["estimators"]["candidate_interval"]
+    assert candidate["interval_ticks"] == 1000
+    assert candidate["fps"] == 30.0
+    assert candidate["rel_delta"] == 0.0
+
+
+def test_estimate_candidate_comes_from_observed_interval_not_declared():
+    block = estimate_measured_fps(describe([1001] * 59), 30000, 30.0, stable=True)
+    candidate = block["estimators"]["candidate_interval"]
+    assert candidate["interval_ticks"] == 1001
+    assert candidate["fps"] == pytest.approx(29.97002997002997)
+    assert candidate["rel_delta"] == pytest.approx(0.000999000999001017)
+    assert block["selected_measured_fps"] == candidate["fps"]
+
+
+def test_estimate_unstable_falls_back_to_median_without_candidate():
+    block = estimate_measured_fps(
+        describe([500, 1500] * 29 + [500]), 30000, 30.0, stable=False
+    )
+    assert block["stable_segment_count"] == 0
+    assert block["estimators"]["candidate_interval"]["fps"] is None
+    assert block["estimators"]["candidate_interval"]["interval_ticks"] is None
+    assert block["selected_estimator"] == "median"
+    assert block["selected_measured_fps"] == 60.0
+
+
+def test_estimate_missing_declared_falls_back_to_median():
+    block = estimate_measured_fps(describe([1000] * 59), 30000, None, stable=True)
+    assert block["selected_estimator"] == "median"
+    assert block["selected_measured_fps"] == 30.0
+    assert block["estimators"]["candidate_interval"]["fps"] == 30.0
+    assert block["estimators"]["mean"]["rel_delta"] is None
+    assert block["estimators"]["median"]["rel_delta"] is None
+
+
+def test_estimate_empty_stats_is_none_safe():
+    block = estimate_measured_fps(describe([]), 30000, 30.0, stable=False)
+    assert block["selected_estimator"] is None
+    assert block["selected_measured_fps"] is None
+    assert block["stable_segment_count"] == 0
+    for estimator in block["estimators"].values():
+        assert estimator["fps"] is None
+        assert estimator["rel_delta"] is None
+
+
+def test_estimate_rejects_non_positive_timescale():
+    with pytest.raises(ValueError):
+        estimate_measured_fps(describe([1000]), 0, 30.0, stable=True)

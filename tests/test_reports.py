@@ -33,7 +33,7 @@ def test_json_report_key_contract(default_config, expected_report, assert_struct
         "source_dir",
     }
     assert_structure(report, expected_report)
-    assert isinstance(report["files"], list) and len(report["files"]) == 5
+    assert isinstance(report["files"], list) and len(report["files"]) == 6
     assert all("reason_codes" in item for item in report["files"])
 
 
@@ -43,8 +43,8 @@ def test_markdown_overview_and_flagged_details(default_config):
         report = build_json_report(ledger, result.run_id)
     markdown = build_markdown_report(report)
     assert "# fpsprobe batch report" in markdown
-    assert "| Total files | 5 |" in markdown
-    assert "| ok | 2 |" in markdown
+    assert "| Total files | 6 |" in markdown
+    assert "| ok | 3 |" in markdown
     assert "| review | 2 |" in markdown
     assert "| reject | 1 |" in markdown
     assert "### broken_order.mp4" in markdown

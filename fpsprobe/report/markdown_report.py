@@ -42,6 +42,7 @@ def _details(entry: dict[str, Any]) -> list[str]:
         f"- Reason: {entry.get('reason_text') or 'n/a'}",
         f"- Declared FPS: {_num(container.get('declared_fps'))}",
         f"- Measured FPS: {_num(timestamps.get('measured_fps'))}",
+        f"- Selected measured FPS: {_num(timestamps.get('selected_measured_fps'))}",
         f"- Frames / intervals: {timestamps.get('frame_count', 0)} / {stats.get('count', 0)}",
         f"- Delta min/median/p95/max (ticks): {_num(stats.get('min'), 1)} / "
         f"{_num(stats.get('median'), 1)} / {_num(stats.get('p95'), 1)} / "

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any, Sequence
 
 from ..models import Thresholds
-from .fps_stats import describe, p95_p50_ratio
+from .fps_stats import describe, estimate_measured_fps, p95_p50_ratio
 from .timestamps import duplicate_indices, reversal_indices
 
 
@@ -17,6 +17,8 @@ def _base_result(
     stats: dict,
     declared_fps: float | None,
     measured_fps: float | None,
+    selected_measured_fps: float | None,
+    estimate_block: dict,
     threshold_ratio: float | None,
     stable: bool,
     max_deviation: float | None,
@@ -24,8 +26,12 @@ def _base_result(
 ) -> dict[str, Any]:
     delta = None
     relative = None
-    if declared_fps is not None and measured_fps is not None and declared_fps > 0:
-        delta = measured_fps - declared_fps
+    if (
+        declared_fps is not None
+        and selected_measured_fps is not None
+        and declared_fps > 0
+    ):
+        delta = selected_measured_fps - declared_fps
         relative = abs(delta) / declared_fps
     return {
         "verdict": None,
@@ -33,6 +39,8 @@ def _base_result(
         "reason_text": "",
         "declared_fps": declared_fps,
         "measured_fps": measured_fps,
+        "selected_measured_fps": selected_measured_fps,
+        "estimate_block": estimate_block,
         "fps_delta": delta,
         "fps_rel_delta": relative,
         "stable": stable,
@@ -78,10 +86,16 @@ def evaluate_consistency(
         and max_deviation is not None
         and max_deviation <= thresholds.cfr_delta_rel_tolerance
     )
+    estimate_block = estimate_measured_fps(
+        stats, timescale, declared_fps, stable=stable
+    )
+    selected_fps = estimate_block["selected_measured_fps"]
     result = _base_result(
         stats,
         declared_fps,
         measured_fps,
+        selected_fps,
+        estimate_block,
         ratio,
         stable,
         max_deviation,
@@ -147,7 +161,7 @@ def evaluate_consistency(
         result["verdict"] = "CFR_MISMATCH"
         result["reason_codes"] = ["DECLARED_FPS_MISSING"]
         result["reason_text"] = (
-            f"Intervals are stable at {_fmt(measured_fps)} fps, but the container "
+            f"Intervals are stable at {_fmt(selected_fps)} fps, but the container "
             "does not expose a usable declared frame rate."
         )
         return result
@@ -163,7 +177,7 @@ def evaluate_consistency(
         result["verdict"] = "CFR_MISMATCH"
         result["reason_codes"] = ["DECLARED_FPS_MISMATCH"]
         result["reason_text"] = (
-            f"Stable intervals measured {_fmt(measured_fps)} fps, but the container "
+            f"Stable intervals measured {_fmt(selected_fps)} fps, but the container "
             f"declares {_fmt(declared_fps)} fps (delta {_fmt(abs_delta)})."
         )
         return result
@@ -171,7 +185,7 @@ def evaluate_consistency(
     result["verdict"] = "CFR_OK"
     result["reason_codes"] = ["FPS_CONSISTENT"]
     result["reason_text"] = (
-        f"Constant-like intervals ({_fmt(measured_fps)} fps) agree with the declared "
+        f"Constant-like intervals ({_fmt(selected_fps)} fps) agree with the declared "
         f"{_fmt(declared_fps)} fps within configured tolerances."
     )
     return result

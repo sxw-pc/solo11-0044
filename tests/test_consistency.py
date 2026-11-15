@@ -33,6 +33,10 @@ def test_cfr_mismatch_2997():
     assert result["verdict"] == "CFR_MISMATCH"
     assert "DECLARED_FPS_MISMATCH" in result["reason_codes"]
     assert abs(result["fps_delta"] - (-0.02997002997)) < 1e-6
+    assert result["selected_measured_fps"] == result["measured_fps"]
+    block = result["estimate_block"]
+    assert block["selected_estimator"] == "candidate_interval"
+    assert block["estimators"]["candidate_interval"]["interval_ticks"] == 1001
 
 
 def test_vfr_suspect_from_dispersion():
@@ -86,3 +90,65 @@ def test_classification_mapping_and_review_threshold():
     assert "MISMATCH_BELOW_REVIEW_THRESHOLD" in low["reason_codes"]
     broken = classify("TIMESTAMP_BROKEN", ["NON_POSITIVE_DELTA"], None, BASE, MAPPING)
     assert broken["classification"] == "reject"
+
+
+def test_short_intervals_in_stable_segment_do_not_drag_selected_fps():
+    deltas = (
+        [1000] * 14 + [990] + [1000] * 14 + [990]
+        + [1000] * 14 + [990] + [1000] * 13 + [990]
+    )
+    result = evaluate_consistency(30.0, deltas, 30000, BASE)
+    assert result["stable"] is True
+    # the legacy mean estimator is dragged past the fps tolerances
+    assert result["measured_fps"] > 30.01
+    # but the candidate interval from the stable segment is selected instead
+    assert result["selected_measured_fps"] == 30.0
+    assert result["estimate_block"]["selected_estimator"] == "candidate_interval"
+    assert result["estimate_block"]["estimators"]["mean"]["fps"] > 30.01
+    assert result["verdict"] == "CFR_OK"
+
+
+def test_candidate_interval_is_not_pulled_toward_declared():
+    # a declared 24 fps cannot select a matching estimator on stable 30 fps media
+    result = evaluate_consistency(24.0, [1000] * 59, 30000, BASE)
+    assert result["verdict"] == "CFR_MISMATCH"
+    assert result["selected_measured_fps"] == 30.0
+    block = result["estimate_block"]
+    assert block["estimators"]["candidate_interval"]["interval_ticks"] == 1000
+    assert block["estimators"]["candidate_interval"]["rel_delta"] == 0.25
+
+
+def test_unstable_sequence_never_selects_candidate_estimator():
+    deltas = [500, 1500] * 29 + [500]  # 59 deltas, same shape as vfr_jitter.mp4
+    result = evaluate_consistency(30.0, deltas, 30000, BASE)
+    assert result["verdict"] == "VFR_SUSPECT"
+    block = result["estimate_block"]
+    assert block["stable_segment_count"] == 0
+    assert block["estimators"]["candidate_interval"]["fps"] is None
+    assert block["selected_estimator"] == "median"
+    assert result["selected_measured_fps"] == 60.0
+
+
+def test_missing_declared_fps_falls_back_to_median():
+    result = evaluate_consistency(None, [1000] * 59, 30000, BASE)
+    assert result["verdict"] == "CFR_MISMATCH"
+    assert "DECLARED_FPS_MISSING" in result["reason_codes"]
+    assert result["estimate_block"]["selected_estimator"] == "median"
+    assert result["selected_measured_fps"] == 30.0
+    assert result["estimate_block"]["estimators"]["mean"]["rel_delta"] is None
+
+
+def test_timestamp_broken_is_not_masked_by_estimator_selection():
+    result = evaluate_consistency(30.0, [1000, 0, -500, 1000], 30000, BASE)
+    assert result["verdict"] == "TIMESTAMP_BROKEN"
+    assert result["estimate_block"]["selected_measured_fps"] is not None
+    assert result["estimate_block"]["estimators"]["candidate_interval"]["fps"] is None
+
+
+def test_no_intervals_estimate_block_is_none_safe():
+    result = evaluate_consistency(30.0, [], 30000, BASE)
+    assert result["selected_measured_fps"] is None
+    block = result["estimate_block"]
+    assert block["selected_estimator"] is None
+    for estimator in block["estimators"].values():
+        assert estimator["fps"] is None

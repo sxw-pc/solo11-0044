@@ -154,6 +154,8 @@ def process_file(
         "delta_ticks": delta_stats,
         "delta_seconds": second_stats,
         "measured_fps": consistency["measured_fps"],
+        "selected_measured_fps": consistency["selected_measured_fps"],
+        "estimate_block": consistency["estimate_block"],
         "jitter": delta_stats["jitter"],
         "p95_p50": consistency["p95_p50"],
         "non_positive_count": len(non_positive_indices(deltas)),

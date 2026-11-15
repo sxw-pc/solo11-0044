@@ -53,6 +53,27 @@
           "p95": 1099.9999999999943,
           "stdev": 450.9876168016973
         },
+        "estimate_block": {
+          "declared_fps": 30.0,
+          "estimators": {
+            "candidate_interval": {
+              "fps": null,
+              "interval_ticks": null,
+              "rel_delta": null
+            },
+            "mean": {
+              "fps": 30.0,
+              "rel_delta": 0.0
+            },
+            "median": {
+              "fps": 30.0,
+              "rel_delta": 0.0
+            }
+          },
+          "selected_estimator": "median",
+          "selected_measured_fps": 30.0,
+          "stable_segment_count": 0
+        },
         "first_pts_seconds": 0.0,
         "first_pts_ticks": 0,
         "frame_count": 60,
@@ -114,7 +135,8 @@
           11,
           13
         ],
-        "p95_p50": 1.0999999999999943
+        "p95_p50": 1.0999999999999943,
+        "selected_measured_fps": 30.0
       },
       "verdict": "TIMESTAMP_BROKEN"
     },
@@ -169,6 +191,27 @@
           "p95": 1001.0,
           "stdev": 0.0
         },
+        "estimate_block": {
+          "declared_fps": 30.0,
+          "estimators": {
+            "candidate_interval": {
+              "fps": 29.97002997002997,
+              "interval_ticks": 1001,
+              "rel_delta": 0.000999000999001017
+            },
+            "mean": {
+              "fps": 29.97002997002997,
+              "rel_delta": 0.000999000999001017
+            },
+            "median": {
+              "fps": 29.97002997002997,
+              "rel_delta": 0.000999000999001017
+            }
+          },
+          "selected_estimator": "candidate_interval",
+          "selected_measured_fps": 29.97002997002997,
+          "stable_segment_count": 59
+        },
         "first_pts_seconds": 0.0,
         "first_pts_ticks": 0,
         "frame_count": 60,
@@ -191,7 +234,8 @@
         "measured_fps": 29.97002997002997,
         "non_positive_count": 0,
         "non_positive_indices": [],
-        "p95_p50": 1.0
+        "p95_p50": 1.0,
+        "selected_measured_fps": 29.97002997002997
       },
       "verdict": "CFR_MISMATCH"
     },
@@ -245,6 +289,27 @@
           "p95": 1000.0,
           "stdev": 0.0
         },
+        "estimate_block": {
+          "declared_fps": 30.0,
+          "estimators": {
+            "candidate_interval": {
+              "fps": 30.0,
+              "interval_ticks": 1000,
+              "rel_delta": 0.0
+            },
+            "mean": {
+              "fps": 30.0,
+              "rel_delta": 0.0
+            },
+            "median": {
+              "fps": 30.0,
+              "rel_delta": 0.0
+            }
+          },
+          "selected_estimator": "candidate_interval",
+          "selected_measured_fps": 30.0,
+          "stable_segment_count": 59
+        },
         "first_pts_seconds": 0.0,
         "first_pts_ticks": 0,
         "frame_count": 60,
@@ -267,7 +332,141 @@
         "measured_fps": 30.0,
         "non_positive_count": 0,
         "non_positive_indices": [],
-        "p95_p50": 1.0
+        "p95_p50": 1.0,
+        "selected_measured_fps": 30.0
+      },
+      "verdict": "CFR_OK"
+    },
+    {
+      "classification": "ok",
+      "container": {
+        "adapter": "builtin",
+        "audio_stream_count": 0,
+        "brand": "isom",
+        "declared_fps": 30.0,
+        "format": "mp4",
+        "frame_count": 60,
+        "moov_at_end": false,
+        "movie_duration_seconds": 2.0,
+        "movie_timescale": 1000,
+        "primary_track_duration_seconds": 1.9986666666666666,
+        "primary_track_id": 1,
+        "primary_track_timescale": 30000,
+        "stream_count": 1,
+        "video_stream_count": 1
+      },
+      "error_code": null,
+      "error_message": null,
+      "path": "cfr_30_short_intervals.mp4",
+      "reason_codes": [
+        "FPS_CONSISTENT"
+      ],
+      "reason_text": "Constant-like intervals (30.000 fps) agree with the declared 30.000 fps within configured tolerances. CFR_OK maps to ok by configuration.",
+      "sha256": "ae8cce809c3bb15eee2cf7da70e9017431c4c5636c6cd303dcdde71beb31f635",
+      "size_bytes": 1103,
+      "status": "ok",
+      "timestamps": {
+        "delta_count": 59,
+        "delta_seconds": {
+          "count": 59,
+          "jitter": 0.0025156711285941715,
+          "max": 0.03333333333333333,
+          "mean": 0.033310734463276835,
+          "median": 0.03333333333333333,
+          "min": 0.033,
+          "p95": 0.03333333333333333,
+          "stdev": 8.37988529615324e-05
+        },
+        "delta_ticks": {
+          "count": 59,
+          "jitter": 0.0025156711285941867,
+          "max": 1000.0,
+          "mean": 999.3220338983051,
+          "median": 1000.0,
+          "min": 990.0,
+          "p95": 1000.0,
+          "stdev": 2.5139655888459873
+        },
+        "estimate_block": {
+          "declared_fps": 30.0,
+          "estimators": {
+            "candidate_interval": {
+              "fps": 30.0,
+              "interval_ticks": 1000,
+              "rel_delta": 0.0
+            },
+            "mean": {
+              "fps": 30.020352781546812,
+              "rel_delta": 0.0006784260515604027
+            },
+            "median": {
+              "fps": 30.0,
+              "rel_delta": 0.0
+            }
+          },
+          "selected_estimator": "candidate_interval",
+          "selected_measured_fps": 30.0,
+          "stable_segment_count": 59
+        },
+        "first_pts_seconds": 0.0,
+        "first_pts_ticks": 0,
+        "frame_count": 60,
+        "histogram": {
+          "bucket_count": 8,
+          "buckets": [
+            {
+              "count": 4,
+              "lower": 990.0,
+              "upper": 991.25
+            },
+            {
+              "count": 0,
+              "lower": 991.25,
+              "upper": 992.5
+            },
+            {
+              "count": 0,
+              "lower": 992.5,
+              "upper": 993.75
+            },
+            {
+              "count": 0,
+              "lower": 993.75,
+              "upper": 995.0
+            },
+            {
+              "count": 0,
+              "lower": 995.0,
+              "upper": 996.25
+            },
+            {
+              "count": 0,
+              "lower": 996.25,
+              "upper": 997.5
+            },
+            {
+              "count": 0,
+              "lower": 997.5,
+              "upper": 998.75
+            },
+            {
+              "count": 55,
+              "lower": 998.75,
+              "upper": 1000.0
+            }
+          ],
+          "max": 1000.0,
+          "min": 990.0,
+          "total": 59
+        },
+        "jitter": 0.0025156711285941867,
+        "last_pts_seconds": 1.9653333333333334,
+        "last_pts_ticks": 58960,
+        "measured_fps": 30.020352781546812,
+        "non_positive_count": 0,
+        "non_positive_indices": [],
+        "p95_p50": 1.0,
+        "selected_measured_fps": 30.0
       },
       "verdict": "CFR_OK"
     },
@@ -321,6 +520,27 @@
           "p95": 1000.0,
           "stdev": 0.0
         },
+        "estimate_block": {
+          "declared_fps": 30.0,
+          "estimators": {
+            "candidate_interval": {
+              "fps": 30.0,
+              "interval_ticks": 1000,
+              "rel_delta": 0.0
+            },
+            "mean": {
+              "fps": 30.0,
+              "rel_delta": 0.0
+            },
+            "median": {
+              "fps": 30.0,
+              "rel_delta": 0.0
+            }
+          },
+          "selected_estimator": "candidate_interval",
+          "selected_measured_fps": 30.0,
+          "stable_segment_count": 59
+        },
         "first_pts_seconds": 0.0,
         "first_pts_ticks": 0,
         "frame_count": 60,
@@ -343,7 +563,8 @@
         "measured_fps": 30.0,
         "non_positive_count": 0,
         "non_positive_indices": [],
-        "p95_p50": 1.0
+        "p95_p50": 1.0,
+        "selected_measured_fps": 30.0
       },
       "verdict": "CFR_OK"
     },
@@ -398,6 +619,27 @@
           "min": 500.0,
           "p95": 1500.0,
           "stdev": 499.9281763983941
+        },
+        "estimate_block": {
+          "declared_fps": 30.0,
+          "estimators": {
+            "candidate_interval": {
+              "fps": null,
+              "interval_ticks": null,
+              "rel_delta": null
+            },
+            "mean": {
+              "fps": 30.25641025641026,
+              "rel_delta": 0.008547008547008635
+            },
+            "median": {
+              "fps": 60.0,
+              "rel_delta": 1.0
+            }
+          },
+          "selected_estimator": "median",
+          "selected_measured_fps": 60.0,
+          "stable_segment_count": 0
         },
         "first_pts_seconds": 0.0,
         "first_pts_ticks": 0,
@@ -456,7 +698,8 @@
         "measured_fps": 30.25641025641026,
         "non_positive_count": 0,
         "non_positive_indices": [],
-        "p95_p50": 3.0
+        "p95_p50": 3.0,
+        "selected_measured_fps": 60.0
       },
       "verdict": "VFR_SUSPECT"
     }
@@ -470,14 +713,14 @@
   },
   "summary": {
     "error": 0,
-    "ok": 2,
+    "ok": 3,
     "reject": 1,
     "review": 2,
     "source_dir": "fixtures/out",
-    "total_files": 5,
+    "total_files": 6,
     "verdicts": {
       "CFR_MISMATCH": 1,
-      "CFR_OK": 2,
+      "CFR_OK": 3,
       "TIMESTAMP_BROKEN": 1,
       "VFR_SUSPECT": 1
     }

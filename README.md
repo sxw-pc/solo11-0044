@@ -23,7 +23,7 @@
 要求 Python 3.10+。运行期没有第三方依赖；测试使用 pytest。
 
 ```bash
-# 1. 生成 5 个确定性 fixture（每次运行 sha256 相同）
+# 1. 生成 6 个确定性 fixture（每次运行 sha256 相同）
 python -m fpsprobe fixtures gen
 
 # 2. 整批分析、写入 SQLite、生成 JSON + Markdown 报告
@@ -116,6 +116,18 @@ make demo    # 生成 fixture -> 整批分析 -> 打印摘要和报告路径
 
 `ok` / `review` / `reject` 的映射来自配置。相同输入、相同配置和相同排序规则产生相同结论；批处理按报告相对路径排序，不使用随机数或当前时间参与分类。
 
+### 实测帧率的多口径估计
+
+`timestamps.measured_fps` 保留旧口径（`timescale / delta 均值`）用于兼容既有报告与台账；判定实际使用 `timestamps.selected_measured_fps`，它来自 `timestamps.estimate_block` 中的三个口径：
+
+| 口径 | 含义 |
+| --- | --- |
+| `mean` | `timescale / delta 均值`，与旧 `measured_fps` 相同 |
+| `median` | `timescale / delta 中位数`，对少量异常间隔稳健 |
+| `candidate_interval` | 仅在间隔整体稳定时计算：把稳定段中位间隔量化为整数 tick 后反推帧率；间隔来自实测而非声明值 |
+
+选择契约（`selected_estimator`）：稳定段存在且声明帧率可用时选 `candidate_interval`；声明帧率缺失或稳定段为空时退回 `median`；`mean` 只在中位数不可用时兜底。候选间隔由实测间隔推出，不是“离声明值最近”的口径，因此声明值无法选中匹配自己的口径，`CFR_MISMATCH` 依旧会触发（例如 `cfr_2997.mp4`），`vfr_jitter.mp4` 这类不稳定序列也不会被中位/候选口径“救”成 `CFR_OK`。`estimate_block` 同时给出每个口径的 `fps` 与其对 `declared_fps` 的相对偏差 `rel_delta`。
+
 ---
 
 ## 命令行与退出码
@@ -126,7 +138,7 @@ make demo    # 生成 fixture -> 整批分析 -> 打印摘要和报告路径
 | `python -m fpsprobe batch --config <path>` | 扫描目录、逐文件分析、入库并写报告 |
 | `python -m fpsprobe report --run-id <id> --format json\|md` | 从 SQLite 重新生成报告 |
 | `python -m fpsprobe serve --port 5180` | 启动只读本地 HTTP 服务 |
-| `python -m fpsprobe fixtures gen` | 生成 5 个确定性 fixture |
+| `python -m fpsprobe fixtures gen` | 生成 6 个确定性 fixture |
 | `python -m fpsprobe selftest` | 生成 fixture 并跑端到端冒烟检查 |
 
 `batch` 与 `report` 支持 `--db <path>` 覆盖默认台账路径。`probe` 与 `batch` 支持 `--primary-track first_video|longest_video|<index>`。
@@ -179,7 +191,7 @@ JSON 报告结构：
 
 - `run_meta`：`run_id`、`config_fingerprint`、`started_at`、`finished_at`、`tool_version`；
 - `summary`：文件总数、`ok/review/reject/error` 计数、各 verdict 计数、相对输入目录标签；
-- `files`：每个文件的容器信息、时间戳统计、直方图、verdict、原因码、分档；
+- `files`：每个文件的容器信息、时间戳统计、直方图、`estimate_block`（多口径实测帧率与 `selected_measured_fps`）、verdict、原因码、分档；
 - `failures`：单文件失败记录（相对路径、错误码、消息）。
 
 `fixtures/expected/sample_report.json` 是**结构契约样例**。测试只校验 key 集合与类型，不逐值硬比，避免机器或时间敏感。报告中不写绝对路径：文件路径相对输入目录（单输入目录时），源目录也使用相对标签。
@@ -239,10 +251,10 @@ python -m pytest -q
 以下数据来自当前仓库的最终自检：
 
 - Python 源文件数（含测试与 fixture 生成器）：**41**
-- Python 总行数（`find fpsprobe fixtures tests -name '*.py' | xargs wc -l`）：**4296**
-- 最大单文件行数：**296**（`fpsprobe/store/ledger.py`）
+- Python 总行数（`find fpsprobe fixtures tests -name '*.py' | xargs wc -l`）：**4587**
+- 最大单文件行数：**299**（`fixtures/generator.py`）
 - 全部单文件 ≤ 300 行
-- `pytest -q`：**56 passed**
+- `pytest -q`：**69 passed**
 - `ruff check fpsprobe fixtures tests`（项目配置）：通过
 
 fixture sha256（两次独立生成一致）：
@@ -250,6 +262,7 @@ fixture sha256（两次独立生成一致）：
 | 文件 | 字节数 | sha256 |
 | --- | ---: | --- |
 | `cfr_30.mp4` | 631 | `d958b13a27217b917c8a0cfc3113150c83940bfcf90e7435445b64d7860b8f63` |
+| `cfr_30_short_intervals.mp4` | 1103 | `ae8cce809c3bb15eee2cf7da70e9017431c4c5636c6cd303dcdde71beb31f635` |
 | `cfr_2997.mp4` | 631 | `5bbf631eca050c87fb043af8e9e59f9dffa97cf141303f8a48c1398aa1dd033b` |
 | `vfr_jitter.mp4` | 1103 | `980b195cce11b36e5d8517b79dbc5511abac5fff6cb3be6a0dfb0460c48170b1` |
 | `broken_order.mp4` | 703 | `75fabf2a07c54fb8eb43fc7461d683b5396ebace7d58a9489c7b36fe6a44ee20` |
@@ -260,6 +273,7 @@ fixture sha256（两次独立生成一致）：
 | 文件 | verdict | classification |
 | --- | --- | --- |
 | `cfr_30.mp4` | `CFR_OK` | `ok` |
+| `cfr_30_short_intervals.mp4` | `CFR_OK` | `ok` |
 | `cfr_2997.mp4` | `CFR_MISMATCH` | `review` |
 | `vfr_jitter.mp4` | `VFR_SUSPECT` | `review` |
 | `broken_order.mp4` | `TIMESTAMP_BROKEN` | `reject` |

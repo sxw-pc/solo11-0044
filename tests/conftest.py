@@ -155,6 +155,22 @@ def make_entry(
                 "jitter": 0.0,
             },
             "measured_fps": 30.0,
+            "selected_measured_fps": 30.0,
+            "estimate_block": {
+                "declared_fps": 30.0,
+                "stable_segment_count": 59,
+                "estimators": {
+                    "mean": {"fps": 30.0, "rel_delta": 0.0},
+                    "median": {"fps": 30.0, "rel_delta": 0.0},
+                    "candidate_interval": {
+                        "fps": 30.0,
+                        "interval_ticks": 1000,
+                        "rel_delta": 0.0,
+                    },
+                },
+                "selected_estimator": "candidate_interval",
+                "selected_measured_fps": 30.0,
+            },
             "jitter": 0.0,
             "p95_p50": 1.0,
             "non_positive_count": 0,

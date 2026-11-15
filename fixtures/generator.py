@@ -176,12 +176,8 @@ def build_mp4(
     return ftyp + moov + mdat
 
 
-CFR_30 = [
-    TrackSpec(1, "vide", 30000, ((60, 1000),), width=640, height=360),
-]
-CFR_2997 = [
-    TrackSpec(1, "vide", 30000, ((60, 1001),), width=1280, height=720),
-]
+CFR_30 = [TrackSpec(1, "vide", 30000, ((60, 1000),), width=640, height=360)]
+CFR_2997 = [TrackSpec(1, "vide", 30000, ((60, 1001),), width=1280, height=720)]
 VFR_JITTER = [
     TrackSpec(
         1,
@@ -191,6 +187,13 @@ VFR_JITTER = [
         width=640,
         height=360,
     ),
+]
+# Mostly 1000-tick intervals with four 990-tick shorts sandwiched in the
+# stable segment: mean fps is dragged off 30, median/candidate stay at 1000.
+SHORT_INTERVALS = [
+    TrackSpec(1, "vide", 30000, tuple(
+        (1, 990) if i in {14, 29, 44, 58} else (1, 1000) for i in range(60)
+    ), width=640, height=360),
 ]
 BROKEN_ORDER = [
     TrackSpec(
@@ -215,6 +218,12 @@ def fixture_definitions() -> list[dict]:
             "name": "cfr_30.mp4",
             "description": "60 frames at exactly 30 fps, moov before mdat",
             "tracks": CFR_30,
+            "moov_at_end": False,
+        },
+        {
+            "name": "cfr_30_short_intervals.mp4",
+            "description": "stable 30 fps segment with a few short intervals sandwiched in",
+            "tracks": SHORT_INTERVALS,
             "moov_at_end": False,
         },
         {

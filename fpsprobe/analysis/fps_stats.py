@@ -103,3 +103,91 @@ def p95_p50_ratio(stats: dict) -> float | None:
     if p95 is None or median is None or median <= 0:
         return None
     return float(p95) / float(median)
+
+
+def _fps_from_interval(interval: float | None, timescale: int) -> float | None:
+    if interval is None or interval <= 0:
+        return None
+    return timescale / float(interval)
+
+
+def _relative_deviation(fps: float | None, declared_fps: float | None) -> float | None:
+    if fps is None or declared_fps is None or declared_fps <= 0:
+        return None
+    return abs(float(fps) - float(declared_fps)) / float(declared_fps)
+
+
+def estimate_measured_fps(
+    stats: dict,
+    timescale: int,
+    declared_fps: float | None = None,
+    *,
+    stable: bool = False,
+) -> dict:
+    """Build the multi-estimator measured-fps block and its selection contract.
+
+    Estimators:
+
+    - ``mean``: legacy estimator, ``timescale / mean(interval)``.
+    - ``median``: robust estimator, ``timescale / median(interval)``.
+    - ``candidate_interval``: only computed when the interval sequence is
+      stable; the median interval of the stable segment is quantised to whole
+      ticks and converted back to fps. It is derived from the observed
+      intervals, never from the declared fps, so a declared value cannot pull
+      the candidate onto itself.
+
+    Selection contract (median and candidate are never used to rescue an
+    unstable sequence into a matching declared value):
+
+    - stable segment present and declared fps usable -> ``candidate_interval``;
+    - declared fps missing or stable segment empty -> ``median``;
+    - ``mean`` is only a last resort when no median is available.
+    """
+    if timescale <= 0:
+        raise ValueError("timescale must be positive")
+    declared = None
+    if declared_fps is not None and declared_fps > 0:
+        declared = float(declared_fps)
+    mean_fps = _fps_from_interval(stats.get("mean"), timescale)
+    median_fps = _fps_from_interval(stats.get("median"), timescale)
+    segment_count = int(stats.get("count") or 0) if stable else 0
+    candidate_ticks = None
+    candidate_fps = None
+    if segment_count:
+        median = stats.get("median")
+        if median is not None and median > 0:
+            candidate_ticks = max(1, int(round(float(median))))
+            candidate_fps = _fps_from_interval(candidate_ticks, timescale)
+    estimators = {
+        "mean": {
+            "fps": mean_fps,
+            "rel_delta": _relative_deviation(mean_fps, declared),
+        },
+        "median": {
+            "fps": median_fps,
+            "rel_delta": _relative_deviation(median_fps, declared),
+        },
+        "candidate_interval": {
+            "fps": candidate_fps,
+            "interval_ticks": candidate_ticks,
+            "rel_delta": _relative_deviation(candidate_fps, declared),
+        },
+    }
+    selected_estimator = None
+    selected_fps = None
+    if candidate_fps is not None and declared is not None:
+        selected_estimator = "candidate_interval"
+        selected_fps = candidate_fps
+    elif median_fps is not None:
+        selected_estimator = "median"
+        selected_fps = median_fps
+    elif mean_fps is not None:
+        selected_estimator = "mean"
+        selected_fps = mean_fps
+    return {
+        "declared_fps": declared_fps,
+        "stable_segment_count": segment_count,
+        "estimators": estimators,
+        "selected_estimator": selected_estimator,
+        "selected_measured_fps": selected_fps,
+    }
