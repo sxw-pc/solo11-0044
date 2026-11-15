@@ -150,6 +150,9 @@ def _build_timestamps(
         pts_ticks=pts,
         dts_ticks=dts,
         stts_deltas=deltas,
+        # Keep real per-sample offsets only when a ctts box exists; an empty
+        # list tells downstream attribution that no composition table applies.
+        ctts_offsets=list(offsets) if ctts is not None else [],
     )
 
 

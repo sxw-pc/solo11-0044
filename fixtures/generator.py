@@ -30,6 +30,7 @@ class TrackSpec:
     width: int = 0
     height: int = 0
     channels: int = 2
+    ctts_version: int = 1
 
     @property
     def sample_count(self) -> int:
@@ -106,9 +107,10 @@ def _stbl(track: TrackSpec, chunk_offset: int) -> bytes:
     boxes.append(_full("stts", 0, 0, stts_body))
     if track.ctts:
         ctts_body = struct.pack(">I", len(track.ctts))
+        fmt = ">Ii" if track.ctts_version == 1 else ">II"
         for count, offset in track.ctts:
-            ctts_body += struct.pack(">Ii", count, offset)
-        boxes.append(_full("ctts", 1, 0, ctts_body))
+            ctts_body += struct.pack(fmt, count, offset)
+        boxes.append(_full("ctts", track.ctts_version, 0, ctts_body))
     if track.sample_count:
         stsc_body = struct.pack(">IIII", 1, 1, track.sample_count, 1)
         stco_body = struct.pack(">II", 1, chunk_offset)

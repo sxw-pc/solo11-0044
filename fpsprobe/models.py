@@ -57,6 +57,9 @@ class TrackTimestamps:
     pts_ticks: list[int] = field(default_factory=list)
     dts_ticks: list[int] = field(default_factory=list)
     stts_deltas: list[int] = field(default_factory=list)
+    # Per-sample composition offsets from ctts; empty when the track has no
+    # ctts box or the adapter cannot expose them (e.g. ffprobe).
+    ctts_offsets: list[int] = field(default_factory=list)
 
     @property
     def timescale(self) -> int:

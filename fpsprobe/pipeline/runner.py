@@ -131,7 +131,14 @@ def process_file(
     second_deltas = ticks_sequence_to_seconds(deltas, ticks)
     second_stats = describe(second_deltas)
     consistency = evaluate_consistency(
-        probe.declared_fps, deltas, ticks, config.thresholds
+        probe.declared_fps,
+        deltas,
+        ticks,
+        config.thresholds,
+        stts_deltas=timestamps.stts_deltas,
+        ctts_offsets=timestamps.ctts_offsets or None,
+        pts_ticks=list(timestamps.pts_ticks),
+        track_id=probe.primary_track.track_id,
     )
     triage = classify(
         consistency["verdict"],
@@ -158,6 +165,7 @@ def process_file(
         "p95_p50": consistency["p95_p50"],
         "non_positive_count": len(non_positive_indices(deltas)),
         "non_positive_indices": consistency["non_positive_indices"],
+        "disorder_attribution": consistency["attribution"],
         "histogram": histogram(deltas, config.histogram_buckets),
     }
     entry = {

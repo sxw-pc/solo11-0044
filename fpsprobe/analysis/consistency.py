@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, Sequence
 
 from ..models import Thresholds
+from .disorder import attribute_disorder
 from .fps_stats import describe, p95_p50_ratio
 from .timestamps import duplicate_indices, reversal_indices
 
@@ -41,6 +42,7 @@ def _base_result(
         "p95_p50": threshold_ratio,
         "non_positive_count": len(non_positive),
         "non_positive_indices": non_positive,
+        "attribution": None,
     }
 
 
@@ -49,6 +51,11 @@ def evaluate_consistency(
     deltas_ticks: Sequence[int],
     timescale: int,
     thresholds: Thresholds,
+    *,
+    stts_deltas: Sequence[int] | None = None,
+    ctts_offsets: Sequence[int] | None = None,
+    pts_ticks: Sequence[int] | None = None,
+    track_id: int | None = None,
 ) -> dict[str, Any]:
     """Classify one interval sequence into one of the four verdicts.
 
@@ -103,13 +110,27 @@ def evaluate_consistency(
         if duplicates:
             codes.append("DUPLICATE_TIMESTAMP")
         codes.append("NON_POSITIVE_DELTA")
-        result["verdict"] = "TIMESTAMP_BROKEN"
-        result["reason_codes"] = codes
-        result["reason_text"] = (
+        attribution = attribute_disorder(
+            deltas_ticks,
+            stts_deltas,
+            ctts_offsets,
+            pts_ticks,
+            track_id=track_id,
+        )
+        reason_text = (
             f"{len(non_positive)} non-positive interval(s) found at indices "
             f"{non_positive[:12]}{'...' if len(non_positive) > 12 else ''}; "
             f"{len(reversals)} reversal(s), {len(duplicates)} duplicate(s)."
         )
+        if attribution is not None and attribution["trigger_count"]:
+            for code in attribution["reason_codes"]:
+                if code not in codes:
+                    codes.append(code)
+            reason_text = f"{reason_text} {attribution['summary_text']}"
+            result["attribution"] = attribution
+        result["verdict"] = "TIMESTAMP_BROKEN"
+        result["reason_codes"] = codes
+        result["reason_text"] = reason_text
         return result
 
     jitter = stats.get("jitter")

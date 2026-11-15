@@ -29,6 +29,31 @@ def _file_row(index: int, entry: dict[str, Any]) -> str:
     )
 
 
+def _attribution_lines(attribution: dict[str, Any]) -> list[str]:
+    lines = [
+        f"- Timestamp disorder attribution: "
+        f"{attribution.get('trigger_count', 0)} trigger(s) on primary track "
+        f"{attribution.get('track_id')}"
+    ]
+    for trigger in attribution.get("triggers", []):
+        offset = trigger.get("ctts_composition_offset")
+        prev_offset = trigger.get("prev_ctts_composition_offset")
+        ctts_text = (
+            "n/a (no ctts table)"
+            if offset is None
+            else f"{offset} (prev {prev_offset})"
+        )
+        lines.append(
+            f"  - sample {trigger.get('sample_index')}: "
+            f"pts_delta={trigger.get('pts_delta_ticks')} ticks, "
+            f"stts_sample_delta={trigger.get('stts_sample_delta')}, "
+            f"ctts_offset={ctts_text} -> {trigger.get('primary_cause')}"
+        )
+    if attribution.get("truncated"):
+        lines.append("  - ... (further triggers truncated in this report)")
+    return lines
+
+
 def _details(entry: dict[str, Any]) -> list[str]:
     container = entry.get("container") or {}
     timestamps = entry.get("timestamps") or {}
@@ -47,8 +72,11 @@ def _details(entry: dict[str, Any]) -> list[str]:
         f"{_num(stats.get('median'), 1)} / {_num(stats.get('p95'), 1)} / "
         f"{_num(stats.get('max'), 1)}",
         f"- Jitter: {_num(stats.get('jitter'))}",
-        "",
     ]
+    attribution = timestamps.get("disorder_attribution")
+    if attribution:
+        lines.extend(_attribution_lines(attribution))
+    lines.append("")
     return lines
 
 

@@ -25,9 +25,10 @@
       "reason_codes": [
         "TIMESTAMP_REVERSAL",
         "DUPLICATE_TIMESTAMP",
-        "NON_POSITIVE_DELTA"
+        "NON_POSITIVE_DELTA",
+        "CTTS_NEGATIVE_OFFSET_REVERSAL"
       ],
-      "reason_text": "3 non-positive interval(s) found at indices [9, 11, 13]; 1 reversal(s), 2 duplicate(s). TIMESTAMP_BROKEN maps to reject by configuration.",
+      "reason_text": "3 non-positive interval(s) found at indices [9, 11, 13]; 1 reversal(s), 2 duplicate(s). Root-cause attribution for 3 non-positive delta(s): CTTS_NEGATIVE_OFFSET_REVERSAL x3; trigger sample indices [10, 12, 14]. TIMESTAMP_BROKEN maps to reject by configuration.",
       "sha256": "75fabf2a07c54fb8eb43fc7461d683b5396ebace7d58a9489c7b36fe6a44ee20",
       "size_bytes": 703,
       "status": "ok",
@@ -52,6 +53,69 @@
           "min": -1000.0,
           "p95": 1099.9999999999943,
           "stdev": 450.9876168016973
+        },
+        "disorder_attribution": {
+          "causes": {
+            "CTTS_NEGATIVE_OFFSET_REVERSAL": 3
+          },
+          "reason_codes": [
+            "CTTS_NEGATIVE_OFFSET_REVERSAL"
+          ],
+          "summary_text": "Root-cause attribution for 3 non-positive delta(s): CTTS_NEGATIVE_OFFSET_REVERSAL x3; trigger sample indices [10, 12, 14].",
+          "track_id": 1,
+          "trigger_count": 3,
+          "triggers": [
+            {
+              "codes": [
+                "CTTS_NEGATIVE_OFFSET_REVERSAL"
+              ],
+              "ctts_composition_offset": -2000,
+              "delta_index": 9,
+              "detail": "sample 10: PTS 8000 ticks does not follow sample 9 PTS 9000 (delta -1000); stts sample_delta=1000, ctts composition_offset=-2000 (prev 0); cause=CTTS_NEGATIVE_OFFSET_REVERSAL.",
+              "prev_ctts_composition_offset": 0,
+              "prev_pts_ticks": 9000,
+              "prev_sample_index": 9,
+              "primary_cause": "CTTS_NEGATIVE_OFFSET_REVERSAL",
+              "pts_delta_ticks": -1000,
+              "pts_ticks": 8000,
+              "sample_index": 10,
+              "stts_sample_delta": 1000
+            },
+            {
+              "codes": [
+                "CTTS_NEGATIVE_OFFSET_REVERSAL"
+              ],
+              "ctts_composition_offset": -2000,
+              "delta_index": 11,
+              "detail": "sample 12: PTS 10000 ticks does not follow sample 11 PTS 10000 (delta 0); stts sample_delta=1000, ctts composition_offset=-2000 (prev -1000); cause=CTTS_NEGATIVE_OFFSET_REVERSAL.",
+              "prev_ctts_composition_offset": -1000,
+              "prev_pts_ticks": 10000,
+              "prev_sample_index": 11,
+              "primary_cause": "CTTS_NEGATIVE_OFFSET_REVERSAL",
+              "pts_delta_ticks": 0,
+              "pts_ticks": 10000,
+              "sample_index": 12,
+              "stts_sample_delta": 1000
+            },
+            {
+              "codes": [
+                "CTTS_NEGATIVE_OFFSET_REVERSAL"
+              ],
+              "ctts_composition_offset": -2000,
+              "delta_index": 13,
+              "detail": "sample 14: PTS 12000 ticks does not follow sample 13 PTS 12000 (delta 0); stts sample_delta=1000, ctts composition_offset=-2000 (prev -1000); cause=CTTS_NEGATIVE_OFFSET_REVERSAL.",
+              "prev_ctts_composition_offset": -1000,
+              "prev_pts_ticks": 12000,
+              "prev_sample_index": 13,
+              "primary_cause": "CTTS_NEGATIVE_OFFSET_REVERSAL",
+              "pts_delta_ticks": 0,
+              "pts_ticks": 12000,
+              "sample_index": 14,
+              "stts_sample_delta": 1000
+            }
+          ],
+          "truncated": false,
+          "version": 1
         },
         "first_pts_seconds": 0.0,
         "first_pts_ticks": 0,
@@ -169,6 +233,7 @@
           "p95": 1001.0,
           "stdev": 0.0
         },
+        "disorder_attribution": null,
         "first_pts_seconds": 0.0,
         "first_pts_ticks": 0,
         "frame_count": 60,
@@ -245,6 +310,7 @@
           "p95": 1000.0,
           "stdev": 0.0
         },
+        "disorder_attribution": null,
         "first_pts_seconds": 0.0,
         "first_pts_ticks": 0,
         "frame_count": 60,
@@ -321,6 +387,7 @@
           "p95": 1000.0,
           "stdev": 0.0
         },
+        "disorder_attribution": null,
         "first_pts_seconds": 0.0,
         "first_pts_ticks": 0,
         "frame_count": 60,
@@ -399,6 +466,7 @@
           "p95": 1500.0,
           "stdev": 499.9281763983941
         },
+        "disorder_attribution": null,
         "first_pts_seconds": 0.0,
         "first_pts_ticks": 0,
         "frame_count": 60,

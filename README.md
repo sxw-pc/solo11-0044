@@ -114,6 +114,21 @@ make demo    # 生成 fixture -> 整批分析 -> 打印摘要和报告路径
 - `reason_text`：人类可读解释；
 - `classification`：`ok` / `review` / `reject` / `error`。
 
+### 无序根因归因
+
+当主力视频轨重建出的 PTS 序列出现非正 delta（`TIMESTAMP_BROKEN`）时，工具会逐样本给出触发点归因，归因码追加在 `reason_codes` 之后，结构化明细写入 `timestamps.disorder_attribution`（单文件 `probe` 输出与批处理 JSON 报告一致），Markdown 报告的 review/reject 明细段落同步列出触发点。未出现非正 delta 的文件该区块为 `null`，原因码不受影响。
+
+每个触发点记录样本索引（`sample_index`，即 PTS 未能前进的样本）、对应的 `stts_sample_delta`、当前及前一样本的 `ctts_composition_offset`、PTS 回退量以及归因码：
+
+| 归因码 | 含义 |
+| --- | --- |
+| `STTS_ZERO_DELTA` | `stts` sample_delta 为 0，解码时间未前进，造成重复时间戳 |
+| `CTTS_DUPLICATE_OFFSET` | 相邻样本 `ctts` 偏移相同且 `stts` 未前进，显示时间完全重复 |
+| `CTTS_NEGATIVE_OFFSET_REVERSAL` | 触发样本的 `ctts` 负偏移较前帧下降，把显示时间拉到前帧之前 |
+| `CTTS_COMBINATION_REVERSAL` | `stts` 为正、偏移均非负，但相邻 `ctts` 组合（大偏移接小偏移）仍造成跨帧回退 |
+
+归因只针对主力视频轨的样本索引，音频等其他轨不参与；`ctts` 版本 0（无符号）与版本 1（有符号）都会展开后参与判定。触发点列表在报告中最多保留 100 条，超出时 `truncated` 置真，`trigger_count` 仍为完整计数。
+
 `ok` / `review` / `reject` 的映射来自配置。相同输入、相同配置和相同排序规则产生相同结论；批处理按报告相对路径排序，不使用随机数或当前时间参与分类。
 
 ---
