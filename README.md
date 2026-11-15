@@ -85,6 +85,8 @@ make demo    # 生成 fixture -> 整批分析 -> 打印摘要和报告路径
 | `thresholds.vfr_jitter_threshold` | float | `0.08` | 抖动系数阈值 |
 | `thresholds.vfr_p95_p50_threshold` | float | `1.5` | p95/p50 比值阈值 |
 | `thresholds.mismatch_review_abs_fps` | float | `0.02` | CFR_MISMATCH 升级为 review 的 FPS 偏差阈值 |
+| `thresholds.align_offset_ms` | float | `40.0` | 音轨对齐首/末帧偏差阈值（毫秒） |
+| `thresholds.align_drift_ms_per_s` | float | `10.0` | 音轨对齐漂移斜率阈值（毫秒/秒） |
 | `classification.cfr_ok` | str | `ok` | 判定到分档的映射 |
 | `classification.cfr_mismatch` | str | `review` | 同上 |
 | `classification.vfr_suspect` | str | `review` | 同上 |
@@ -115,6 +117,10 @@ make demo    # 生成 fixture -> 整批分析 -> 打印摘要和报告路径
 - `classification`：`ok` / `review` / `reject` / `error`。
 
 `ok` / `review` / `reject` 的映射来自配置。相同输入、相同配置和相同排序规则产生相同结论；批处理按报告相对路径排序，不使用随机数或当前时间参与分类。
+
+### 音轨时间基准对齐（`align` 块）
+
+每个成功分析的 entry 顶层还带一个 `align` 诊断块：以主力视频轨为参考，取第一条音频轨，两轨 PTS 各自按 mdhd timescale 换算为秒（不做帧号配对），给出首帧相对偏移 `first_offset_ms`、末帧偏差 `end_offset_ms`、共同覆盖时间窗内的漂移斜率 `drift_ms_per_s`，以及 `truncated_by_movie`、`reference_track_id`、`audio_track_id`、`timescales`、`sample_count`。音频末尾 PTS 超出 `mvhd` 影片时长时按时长裁剪再算末帧偏差，并置 `truncated_by_movie=true`。判定规则：无音频轨为 `SKIPPED_NO_AUDIO`；|首帧偏移| 或 |末帧偏差| 达到 `align_offset_ms` 为 `OFFSET_EXCEEDED`；否则 |漂移斜率| 达到 `align_drift_ms_per_s` 为 `DRIFT_SUSPECT`；其余为 `ALIGNED`。该诊断不影响上面的 verdict 与分档。
 
 ---
 

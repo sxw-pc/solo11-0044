@@ -1,5 +1,6 @@
 """Timestamp statistics, consistency verdicts, and triage classification."""
 
+from .align import evaluate_alignment
 from .classify import classify
 from .consistency import evaluate_consistency
 from .fps_stats import describe, histogram
@@ -9,6 +10,7 @@ __all__ = [
     "classify",
     "compute_deltas",
     "describe",
+    "evaluate_alignment",
     "evaluate_consistency",
     "histogram",
     "non_positive_indices",

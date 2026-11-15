@@ -185,4 +185,5 @@ class FfprobeAdapter:
             declared_fps=declared,
             moov_at_end=False,
             adapter=self.name,
+            timestamps_by_id={primary.track_id: timestamps},
         )

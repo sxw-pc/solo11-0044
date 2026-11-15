@@ -223,6 +223,22 @@ def load_config(path: str | Path, base_dir: str | Path | None = None) -> Config:
             ),
             "thresholds.mismatch_review_abs_fps",
         ),
+        align_offset_ms=_number(
+            _require(
+                threshold_raw,
+                "align_offset_ms",
+                "thresholds.align_offset_ms",
+            ),
+            "thresholds.align_offset_ms",
+        ),
+        align_drift_ms_per_s=_number(
+            _require(
+                threshold_raw,
+                "align_drift_ms_per_s",
+                "thresholds.align_drift_ms_per_s",
+            ),
+            "thresholds.align_drift_ms_per_s",
+        ),
     )
 
     adapter = raw.get("adapter", "builtin")

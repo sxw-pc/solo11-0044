@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from ..analysis.align import evaluate_alignment
 from ..analysis.classify import classify
 from ..analysis.consistency import evaluate_consistency
 from ..analysis.fps_stats import describe, histogram
@@ -57,6 +58,7 @@ def _error_entry(
         "error_message": error.message,
         "container": None,
         "timestamps": None,
+        "align": None,
         "verdict": None,
         "reason_codes": ["PROBE_ERROR"],
         "reason_text": error.message,
@@ -169,6 +171,7 @@ def process_file(
         "error_message": None,
         "container": _container_block(probe),
         "timestamps": timestamps_block,
+        "align": evaluate_alignment(probe, config.thresholds),
         "verdict": consistency["verdict"],
         "reason_codes": reason_codes,
         "reason_text": reason_text,

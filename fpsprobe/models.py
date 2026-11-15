@@ -17,6 +17,8 @@ class Thresholds:
     vfr_jitter_threshold: float
     vfr_p95_p50_threshold: float
     mismatch_review_abs_fps: float
+    align_offset_ms: float
+    align_drift_ms_per_s: float
 
 
 @dataclass(frozen=True)
@@ -85,6 +87,7 @@ class ProbeResult:
     declared_fps: float | None
     moov_at_end: bool
     adapter: str = "builtin"
+    timestamps_by_id: dict[int, TrackTimestamps] = field(default_factory=dict)
 
     @property
     def movie_duration_seconds(self) -> float:

@@ -11,6 +11,8 @@ BASE = Thresholds(
     vfr_jitter_threshold=0.08,
     vfr_p95_p50_threshold=1.5,
     mismatch_review_abs_fps=0.02,
+    align_offset_ms=40.0,
+    align_drift_ms_per_s=10.0,
 )
 MAPPING = {
     "CFR_OK": "ok",
@@ -72,6 +74,8 @@ def test_thresholds_are_external_configuration():
         vfr_jitter_threshold=10.0,
         vfr_p95_p50_threshold=10.0,
         mismatch_review_abs_fps=1.0,
+        align_offset_ms=1000.0,
+        align_drift_ms_per_s=1000.0,
     )
     result = evaluate_consistency(30.0, [500, 1500] * 30, 30000, loose)
     assert result["verdict"] == "CFR_OK"

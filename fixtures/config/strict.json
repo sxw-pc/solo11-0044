@@ -22,7 +22,9 @@
     "cfr_delta_rel_tolerance": 0.001,
     "vfr_jitter_threshold": 0.02,
     "vfr_p95_p50_threshold": 1.1,
-    "mismatch_review_abs_fps": 0.001
+    "mismatch_review_abs_fps": 0.001,
+    "align_offset_ms": 20.0,
+    "align_drift_ms_per_s": 5.0
   },
   "classification": {
     "cfr_ok": "ok",

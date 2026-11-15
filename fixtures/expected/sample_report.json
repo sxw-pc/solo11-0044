@@ -2,6 +2,23 @@
   "failures": [],
   "files": [
     {
+      "align": {
+        "audio_track_id": null,
+        "drift_ms_per_s": null,
+        "end_offset_ms": null,
+        "first_offset_ms": null,
+        "reference_track_id": 1,
+        "sample_count": {
+          "audio": null,
+          "reference": 60
+        },
+        "timescales": {
+          "audio": null,
+          "reference": 30000
+        },
+        "truncated_by_movie": false,
+        "verdict": "SKIPPED_NO_AUDIO"
+      },
       "classification": "reject",
       "container": {
         "adapter": "builtin",
@@ -119,6 +136,23 @@
       "verdict": "TIMESTAMP_BROKEN"
     },
     {
+      "align": {
+        "audio_track_id": null,
+        "drift_ms_per_s": null,
+        "end_offset_ms": null,
+        "first_offset_ms": null,
+        "reference_track_id": 1,
+        "sample_count": {
+          "audio": null,
+          "reference": 60
+        },
+        "timescales": {
+          "audio": null,
+          "reference": 30000
+        },
+        "truncated_by_movie": false,
+        "verdict": "SKIPPED_NO_AUDIO"
+      },
       "classification": "review",
       "container": {
         "adapter": "builtin",
@@ -196,6 +230,23 @@
       "verdict": "CFR_MISMATCH"
     },
     {
+      "align": {
+        "audio_track_id": null,
+        "drift_ms_per_s": null,
+        "end_offset_ms": null,
+        "first_offset_ms": null,
+        "reference_track_id": 1,
+        "sample_count": {
+          "audio": null,
+          "reference": 60
+        },
+        "timescales": {
+          "audio": null,
+          "reference": 30000
+        },
+        "truncated_by_movie": false,
+        "verdict": "SKIPPED_NO_AUDIO"
+      },
       "classification": "ok",
       "container": {
         "adapter": "builtin",
@@ -272,6 +323,23 @@
       "verdict": "CFR_OK"
     },
     {
+      "align": {
+        "audio_track_id": 2,
+        "drift_ms_per_s": 8.813559322033944,
+        "end_offset_ms": 17.33333333333342,
+        "first_offset_ms": 0.0,
+        "reference_track_id": 1,
+        "sample_count": {
+          "audio": 94,
+          "reference": 60
+        },
+        "timescales": {
+          "audio": 48000,
+          "reference": 30000
+        },
+        "truncated_by_movie": false,
+        "verdict": "ALIGNED"
+      },
       "classification": "ok",
       "container": {
         "adapter": "builtin",
@@ -348,6 +416,23 @@
       "verdict": "CFR_OK"
     },
     {
+      "align": {
+        "audio_track_id": null,
+        "drift_ms_per_s": null,
+        "end_offset_ms": null,
+        "first_offset_ms": null,
+        "reference_track_id": 1,
+        "sample_count": {
+          "audio": null,
+          "reference": 60
+        },
+        "timescales": {
+          "audio": null,
+          "reference": 30000
+        },
+        "truncated_by_movie": false,
+        "verdict": "SKIPPED_NO_AUDIO"
+      },
       "classification": "review",
       "container": {
         "adapter": "builtin",
